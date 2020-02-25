@@ -26,7 +26,7 @@ admin.initializeApp({
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
   logger.info(`hetekspelapi server listening on port: ${process.env.PORT || 3000}`);
 
 }
