@@ -1,8 +1,9 @@
 import {Column, Entity, Index, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 
 @Entity()
 @Index(['firebaseIdentifier'], {unique: true})
-export class Deelnemer {
+export class Participant {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
@@ -15,4 +16,6 @@ export class Deelnemer {
     @Column({select: false})
     firebaseIdentifier: string;
 
+    @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.match)
+    matchPredictions: MatchPrediction[];
 }
