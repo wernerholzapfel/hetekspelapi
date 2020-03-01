@@ -1,5 +1,6 @@
 import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {Match} from '../match/match.entity';
+import {PoulePrediction} from '../poule-prediction/poule-prediction.entity';
 
 @Entity()
 export class Team {
@@ -14,6 +15,9 @@ export class Team {
 
     @OneToMany(type => Match, match => match.homeTeam)
     matches: Match[];
+
+    @OneToMany(type => PoulePrediction, poulePrediction => poulePrediction.team)
+    poulePredictions: PoulePrediction[];
 
 }
 

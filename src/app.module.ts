@@ -11,6 +11,8 @@ import {Participant} from './participant/participant.entity';
 import {ParticipantsModule} from './participant/participants.module';
 import {Team} from './team/team.entity';
 import {TeamModule} from './team/team.module';
+import {PoulePredictionModule} from './poule-prediction/poule-prediction.module';
+import {PoulePrediction} from './poule-prediction/poule-prediction.entity';
 
 @Module({
     imports: [
@@ -21,11 +23,11 @@ import {TeamModule} from './team/team.module';
                 ssl: process.env.DB_SSL
             },
             entities: [
-                Participant, Team, Match, MatchPrediction
+                Participant, Team, Match, MatchPrediction, PoulePrediction
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
-        }), ParticipantsModule,TeamModule, MatchModule, MatchPredictionModule
+        }), ParticipantsModule, TeamModule, MatchModule, MatchPredictionModule, PoulePredictionModule
     ],
     controllers: [AppController],
     providers: [AppService],
@@ -37,6 +39,8 @@ export class AppModule {
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: '/match-prediction', method: RequestMethod.GET},
-            {path: '/match-prediction', method: RequestMethod.POST});
+            {path: '/match-prediction', method: RequestMethod.POST},
+            {path: '/poule-prediction', method: RequestMethod.GET},
+            {path: '/poule-prediction', method: RequestMethod.POST});
     }
 }
