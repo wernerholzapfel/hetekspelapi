@@ -5,8 +5,11 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "nest build",
+    "build": "tsc",
+    "dev": "nodemon",
+    "prestart:prod": "tsc",
+    "prestart": "npm run build",
+    "prepublish": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
