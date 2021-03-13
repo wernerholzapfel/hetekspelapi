@@ -1,5 +1,6 @@
 import {Column, Entity, Index, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
+import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 
 @Entity()
 @Index(['firebaseIdentifier'], {unique: true})
@@ -16,6 +17,9 @@ export class Participant {
     @Column({select: false})
     firebaseIdentifier: string;
 
-    @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.match)
+    @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.participant)
     matchPredictions: MatchPrediction[];
+
+    @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.participant)
+    knockoutPredictions: KnockoutPrediction[];
 }

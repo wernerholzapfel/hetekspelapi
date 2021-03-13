@@ -16,6 +16,24 @@ export class PoulePrediction {
     @Column({nullable: false})
     thirdPositionScore: number;
 
+    @Column({nullable: true})
+    punten: number;
+
+    @Column({nullable: true})
+    goalsFor: number;
+
+    @Column({nullable: true})
+    goalsAgainst: number;
+
+    @Column({nullable: true})
+    winst: number;
+
+    @Column({nullable: true})
+    positie: number;
+
+    @Column({nullable: true})
+    gespeeld: number;
+
     @ManyToOne(type => Team, team => team.poulePredictions, {nullable: false})
     team: Team;
 

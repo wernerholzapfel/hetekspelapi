@@ -13,6 +13,10 @@ import {Team} from './team/team.entity';
 import {TeamModule} from './team/team.module';
 import {PoulePredictionModule} from './poule-prediction/poule-prediction.module';
 import {PoulePrediction} from './poule-prediction/poule-prediction.entity';
+import {Knockout} from "./knockout/knockout.entity";
+import {KnockoutModule} from "./knockout/knockout.module";
+import {KnockoutPrediction} from "./knockout-prediction/knockout-prediction.entity";
+import {KnockoutPredictionModule} from "./knockout-prediction/knockout-prediction.module";
 
 @Module({
     imports: [
@@ -23,11 +27,23 @@ import {PoulePrediction} from './poule-prediction/poule-prediction.entity';
                 ssl: process.env.DB_SSL
             },
             entities: [
-                Participant, Team, Match, MatchPrediction, PoulePrediction
+                Participant,
+                Team,
+                Match,
+                MatchPrediction,
+                PoulePrediction,
+                Knockout,
+                KnockoutPrediction
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
-        }), ParticipantsModule, TeamModule, MatchModule, MatchPredictionModule, PoulePredictionModule
+        }), ParticipantsModule,
+        TeamModule,
+        MatchModule,
+        MatchPredictionModule,
+        PoulePredictionModule,
+        KnockoutModule,
+        KnockoutPredictionModule
     ],
     controllers: [AppController],
     providers: [AppService],
@@ -40,6 +56,8 @@ export class AppModule {
             {path: '/**', method: RequestMethod.POST},
             {path: '/match-prediction', method: RequestMethod.GET},
             {path: '/match-prediction', method: RequestMethod.POST},
+            {path: '/knockout', method: RequestMethod.GET},
+            {path: '/knockout-prediction', method: RequestMethod.POST},
             {path: '/poule-prediction', method: RequestMethod.GET},
             {path: '/poule-prediction', method: RequestMethod.POST});
     }

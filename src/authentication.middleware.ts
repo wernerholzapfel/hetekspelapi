@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import 'dotenv/config';
 import * as admin from 'firebase-admin';
-import {getRepository} from 'typeorm';
 
 @Injectable()
 export class AddFireBaseUserToRequest implements NestMiddleware {
@@ -118,14 +117,14 @@ export class CanSavePrediction implements NestMiddleware {
 }
 
 const getToken = headers => {
-        if (headers && headers.authorization) {
-            const parted = headers.authorization.split(' ');
-            if (parted.length === 2) {
-                return parted[1];
-            } else {
-                return null;
-            }
+    if (headers && headers.authorization) {
+        const parted = headers.authorization.split(' ');
+        if (parted.length === 2) {
+            return parted[1];
         } else {
             return null;
         }
-    };
+    } else {
+        return null;
+    }
+};
