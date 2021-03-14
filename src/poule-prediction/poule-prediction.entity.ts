@@ -7,9 +7,6 @@ export class PoulePrediction {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({nullable: false})
-    position: number;
-
     @Column({nullable: true})
     poule: string;
 
