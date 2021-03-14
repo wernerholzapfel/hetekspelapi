@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Connection, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Participant} from '../participant/participant.entity';
@@ -7,7 +7,6 @@ import {CreatePoulePredictionDto} from './create-poule-prediction.dto';
 import {MatchPrediction} from "../match-prediction/match-prediction.entity";
 import {Team} from "../team/team.entity";
 import {MatchPredictionService} from "../match-prediction/match-prediction.service";
-import logger from 'src/common/logger';
 
 @Injectable()
 export class PoulePredictionService {
@@ -19,7 +18,6 @@ export class PoulePredictionService {
 
     }
 
-    private readonly logger = new Logger('PoulePredictionService', true);
 
     async findPoulePredictionsForParticipant(firebaseIdentifier: string): Promise<PoulePrediction[]> {
         const poulePredictions = await this.connection.getRepository(PoulePrediction)
@@ -31,11 +29,8 @@ export class PoulePredictionService {
             .getMany();
 
         if (poulePredictions.length === 0) {
-            logger.info('ok')
 
             const matchPredictions = await this.matchPredictionService.findMatchesForParticipant(firebaseIdentifier);
-            logger.info('zoveel voorspellingne: ' + matchPredictions.length)
-            logger.info(matchPredictions[0]);
             return [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
                 ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'B'), true),
                 ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'C'), true),
@@ -44,7 +39,6 @@ export class PoulePredictionService {
                 ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'F'), true),
             ]
         }
-        logger.info('fout')
         return poulePredictions
     }
 
