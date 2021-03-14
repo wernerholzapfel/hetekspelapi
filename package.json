@@ -6,6 +6,8 @@
   "license": "MIT",
   "scripts": {
     "typings": "typings install",
+    "tsc": "tsc",
+    "postinstall": "npm run tsc",
     "build": "tsc",
     "dev": "nodemon",
     "prestart:prod": "tsc",
