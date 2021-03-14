@@ -114,7 +114,7 @@ export class PoulePredictionService {
         return index + 1;
         // return index > 0 && tableLine.sortering === table[index - 1].sortering ?
         //     table[index - 1].positie : index + 1;
-    }
+    }   
 
     calculateSortering(tableLine: PoulePrediction, matches: MatchPrediction[], table: PoulePrediction[]) {
         const teamsEqualOnPoints = table.filter(line => line.punten === tableLine.punten).map(line => {

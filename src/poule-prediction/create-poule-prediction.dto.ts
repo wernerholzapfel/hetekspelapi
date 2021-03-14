@@ -6,5 +6,4 @@ export class CreatePoulePredictionDto {
 
     @IsDefined() readonly team: Team;
     @IsDefined() poule: string;
-    @IsNumber() readonly position: number;
 }
