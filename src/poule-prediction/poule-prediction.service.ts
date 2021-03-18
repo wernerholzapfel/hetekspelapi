@@ -28,18 +28,33 @@ export class PoulePredictionService {
             // .orderBy('poulePrediction.poule')
             .getMany();
 
-        if (poulePredictions.length === 0) {
+        // if (poulePredictions.length === 0) {
 
-            const matchPredictions = await this.matchPredictionService.findMatchesForParticipant(firebaseIdentifier);
-            return [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
-                ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'B'), true),
-                ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'C'), true),
-                ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'D'), true),
-                ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'E'), true),
-                ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'F'), true),
-            ]
-        }
-        return poulePredictions
+        const matchPredictions = await this.matchPredictionService.findMatchesForParticipant(firebaseIdentifier);
+        const poulesBasedOnMatches = [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'B'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'C'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'D'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'E'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'F'), true),
+        ]
+
+        return poulesBasedOnMatches.map(line => {
+            const getPositieFromPrediction = poulePredictions.find(pp => pp.team.id === line.team.id)
+            console.log(getPositieFromPrediction)
+
+            if (getPositieFromPrediction) {
+
+                return {
+                    ...line,
+                    id: getPositieFromPrediction.id,
+                    positie: getPositieFromPrediction.positie
+                }
+            } else {
+                delete line['id'];
+                return line;
+            }
+        })
     }
 
     async createPoulePrediction(items: CreatePoulePredictionDto[], firebaseIdentifier): Promise<PoulePrediction[]> {
@@ -114,7 +129,7 @@ export class PoulePredictionService {
         return index + 1;
         // return index > 0 && tableLine.sortering === table[index - 1].sortering ?
         //     table[index - 1].positie : index + 1;
-    }   
+    }
 
     calculateSortering(tableLine: PoulePrediction, matches: MatchPrediction[], table: PoulePrediction[]) {
         const teamsEqualOnPoints = table.filter(line => line.punten === tableLine.punten).map(line => {

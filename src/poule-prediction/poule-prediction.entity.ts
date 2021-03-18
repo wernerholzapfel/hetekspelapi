@@ -1,8 +1,9 @@
-import {Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
+import {Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 import {Participant} from '../participant/participant.entity';
 import {Team} from '../team/team.entity';
 
 @Entity()
+@Index(['participant', 'team'], {unique: true})
 export class PoulePrediction {
     @PrimaryGeneratedColumn('uuid')
     id: string;
