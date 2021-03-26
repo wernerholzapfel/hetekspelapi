@@ -1,4 +1,12 @@
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn
+} from 'typeorm';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {Team} from '../team/team.entity';
 
@@ -33,4 +41,10 @@ export class Match {
 
     @ManyToOne(type => Team, team => team.matches)
     awayTeam: Team;
+
+    @UpdateDateColumn()
+    updatedDate: Date;
+
+    @CreateDateColumn()
+    createdDate: Date;
 }

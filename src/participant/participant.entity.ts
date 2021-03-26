@@ -1,4 +1,11 @@
-import {Column, Entity, Index, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column, CreateDateColumn,
+    Entity,
+    Index,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn
+} from 'typeorm';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 
@@ -22,4 +29,10 @@ export class Participant {
 
     @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.participant)
     knockoutPredictions: KnockoutPrediction[];
+
+    @UpdateDateColumn()
+    updatedDate: Date;
+
+    @CreateDateColumn()
+    createdDate: Date;
 }

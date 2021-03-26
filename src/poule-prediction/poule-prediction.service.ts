@@ -7,6 +7,7 @@ import {CreatePoulePredictionDto} from './create-poule-prediction.dto';
 import {MatchPrediction} from "../match-prediction/match-prediction.entity";
 import {Team} from "../team/team.entity";
 import {MatchPredictionService} from "../match-prediction/match-prediction.service";
+import {Match} from "../match/match.entity";
 
 @Injectable()
 export class PoulePredictionService {
@@ -25,10 +26,8 @@ export class PoulePredictionService {
             .leftJoinAndSelect('pouleprediction.team', 'team')
             .leftJoin('pouleprediction.participant', 'participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
-            // .orderBy('poulePrediction.poule')
             .getMany();
 
-        // if (poulePredictions.length === 0) {
 
         const matchPredictions = await this.matchPredictionService.findMatchesForParticipant(firebaseIdentifier);
         const poulesBasedOnMatches = [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
@@ -40,21 +39,34 @@ export class PoulePredictionService {
         ]
 
         return poulesBasedOnMatches.map(line => {
-            const getPositieFromPrediction = poulePredictions.find(pp => pp.team.id === line.team.id)
-            console.log(getPositieFromPrediction)
+            const poulePrediction = poulePredictions.find(pp => pp.team.id === line.team.id)
 
-            if (getPositieFromPrediction) {
+            if (poulePrediction) {
 
                 return {
                     ...line,
-                    id: getPositieFromPrediction.id,
-                    positie: getPositieFromPrediction.positie
+                    id: poulePrediction.id,
+                    spelpunten: poulePrediction.spelpunten,
+                    positie: poulePrediction.positie
                 }
             } else {
                 delete line['id'];
                 return line;
             }
         })
+    }
+
+    async findWerkelijkePouleResults(): Promise<PoulePrediction[]> {
+
+        const matches = await this.matchPredictionService.findMatches();
+        const poulesBasedOnMatches = [...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'A'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'B'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'C'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'D'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'E'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'F'), true),
+        ]
+        return poulesBasedOnMatches
     }
 
     async createPoulePrediction(items: CreatePoulePredictionDto[], firebaseIdentifier): Promise<PoulePrediction[]> {
@@ -80,6 +92,49 @@ export class PoulePredictionService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+    }
+
+
+    private berekenWerkelijkeStand(matches: Match[], sortTable: boolean): PoulePrediction[] {
+        let table: PoulePrediction[] = [];
+
+        for (const match of matches) {
+            const index = table.findIndex(t => t.team.id === match.homeTeam.id);
+
+            if (index === -1) {
+                table.push(this.createInitialTableLine(match.homeTeam, match.poule));
+            }
+        }
+
+        for (const match of matches) {
+            const index = table.findIndex(t => t.team.id === match.awayTeam.id);
+
+            if (index === -1) {
+                table.push(this.createInitialTableLine(match.awayTeam, match.poule));
+            }
+        }
+
+        for (const match of matches) {
+            table = this.updateWerkelijkeTableLine(table, match);
+        }
+
+        if (sortTable) {
+            table = table.map(line => {
+                return {
+                    ...line,
+                    thirdPositionScore: this.calculateScoreForThirdPosition(line),
+                    sortering: this.calculateWerkelijkeSortering(line, matches, table)
+                };
+            })
+                .sort((a, b) =>
+                    (b.sortering - a.sortering))
+                .reduce((accumulator, currentValue, index) => {
+                    return [...accumulator, Object.assign({}, currentValue, {
+                        positie: this.calculatePosition(currentValue, index, accumulator)
+                    })];
+                }, []);
+        }
+        return table;
     }
 
 
@@ -171,6 +226,46 @@ export class PoulePredictionService {
 
     }
 
+    calculateWerkelijkeSortering(tableLine: PoulePrediction, matches: Match[], table: PoulePrediction[]) {
+        const teamsEqualOnPoints = table.filter(line => line.punten === tableLine.punten).map(line => {
+            return line.team.id;
+        });
+
+        if (teamsEqualOnPoints.length > 1) {
+            const matchesForTeam = matches.filter(match => {
+                return teamsEqualOnPoints.includes(match.homeTeam.id) && (teamsEqualOnPoints.includes(match.awayTeam.id));
+            });
+            const tableWithTeamsEqualOnPoints: PoulePrediction[] = this.berekenWerkelijkeStand(matchesForTeam, false);
+            const tableLineWithTeamEqualOnPoints: PoulePrediction = tableWithTeamsEqualOnPoints.find(line => line.team.id === tableLine.team.id);
+
+            return (tableLine.punten * 10000000 +
+                tableLineWithTeamEqualOnPoints.punten * 100000 +
+                ((tableLineWithTeamEqualOnPoints.goalsFor - tableLineWithTeamEqualOnPoints.goalsAgainst) * 100) +
+                tableLineWithTeamEqualOnPoints.goalsFor +
+                ((tableLine.goalsFor - tableLine.goalsAgainst) / 100) +
+                tableLine.goalsFor / 10000);
+        } else {
+            return (tableLine.punten * 10000000 +
+                ((tableLine.goalsFor - tableLine.goalsAgainst) * 100) +
+                tableLine.goalsFor);
+
+        }
+        // a. higher number of points obtained in the matches played among the teams in
+        // question;
+        // b. superior goal difference resulting from the matches played among the teams
+        // in question;
+        // c. higher number of goals scored in the matches played among the teams in
+        // question;
+        // d. if, after having applied criteria a) to c), teams still have an equal ranking,
+        // criteria a) to c) are reapplied exclusively to the matches between the
+        // remaining teams to determine their final rankings. If this procedure does not
+        // lead to a decision, criteria e) to i) apply in the order given to the two or more
+        // teams still equal:
+        // e. superior goal difference in all group matches;
+        // f. higher number of goals scored in all group mat
+
+    }
+
 
     // a. higher number of points;
     // b. superior goal difference;
@@ -208,6 +303,38 @@ export class PoulePredictionService {
             }
         });
 
+    }
+
+    private updateWerkelijkeTableLine(table: PoulePrediction[], match: Match): PoulePrediction[] {
+        return table.map(line => {
+            if (line.team.id === match.homeTeam.id) {
+                return this.updateWerkelijkeTeamLine(line, match, true);
+            } else if (line.team.id === match.awayTeam.id) {
+                return this.updateWerkelijkeTeamLine(line, match, false);
+            } else {
+                return {...line};
+            }
+        });
+
+    }
+
+    updateWerkelijkeTeamLine(line: PoulePrediction, match: Match, homeTeam: boolean) {
+        return match.homeScore === undefined || match.awayScore === undefined ||
+        match.homeScore === null || match.awayScore === null ?
+            {...line} :
+            {
+                ...line,
+                gespeeld: line.gespeeld + 1,
+                winst: (this.punten(homeTeam ?
+                    match.homeScore : match.awayScore, homeTeam ?
+                    match.awayScore : match.homeScore) === 3) ? line.winst + 1 : line.winst,
+                punten: line.punten +
+                    this.punten(homeTeam ?
+                        match.homeScore : match.awayScore, homeTeam ?
+                        match.awayScore : match.homeScore),
+                goalsFor: line.goalsFor + (homeTeam ? match.homeScore : match.awayScore),
+                goalsAgainst: line.goalsAgainst + (homeTeam ? match.awayScore : match.homeScore)
+            };
     }
 
     updateTeamLine(line: PoulePrediction, matchPrediction: MatchPrediction, homeTeam: boolean) {

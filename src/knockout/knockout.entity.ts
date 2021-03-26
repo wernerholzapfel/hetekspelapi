@@ -1,4 +1,12 @@
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn
+} from 'typeorm';
 import {Team} from '../team/team.entity';
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 
@@ -40,4 +48,13 @@ export class Knockout {
 
     @ManyToOne(type => Team, team => team.matches) // todo fix this
     awayTeam: Team;
+
+    @ManyToOne(type => Team, team => team.matches) // todo fix this
+    winnerTeam: Team;
+
+    @UpdateDateColumn()
+    updatedDate: Date;
+
+    @CreateDateColumn()
+    createdDate: Date;
 }

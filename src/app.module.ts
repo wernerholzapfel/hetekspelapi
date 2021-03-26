@@ -56,7 +56,7 @@ export class AppModule {
             {path: '/**', method: RequestMethod.POST},
             {path: '/match-prediction', method: RequestMethod.GET},
             {path: '/match-prediction', method: RequestMethod.POST},
-            {path: '/knockout', method: RequestMethod.GET},
+            {path: '/knockout/mine', method: RequestMethod.GET},
             {path: '/knockout-prediction', method: RequestMethod.POST},
             {path: '/poule-prediction', method: RequestMethod.GET},
             {path: '/poule-prediction', method: RequestMethod.POST});

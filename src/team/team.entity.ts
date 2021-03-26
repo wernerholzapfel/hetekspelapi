@@ -1,4 +1,4 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 import {Match} from '../match/match.entity';
 import {PoulePrediction} from '../poule-prediction/poule-prediction.entity';
 import {Knockout} from "../knockout/knockout.entity";
@@ -15,6 +15,9 @@ export class Team {
     @Column('text', {nullable: true})
     logoUrl: string;
 
+    @Column('int', {nullable: true})
+    poulePosition: number
+
     @OneToMany(type => Match, match => match.homeTeam)
     matches: Match[];
 
@@ -27,7 +30,9 @@ export class Team {
     @OneToMany(type => PoulePrediction, poulePrediction => poulePrediction.team)
     poulePredictions: PoulePrediction[];
 
-}
+    @UpdateDateColumn()
+    updatedDate: Date;
 
-export class TeamRead extends Team {
+    @CreateDateColumn()
+    createdDate: Date;
 }

@@ -16,7 +16,7 @@ export class KnockoutPrediction {
     selectedTeam: Team;
 
     @Column({nullable: true})
-    punten: number;
+    spelpunten: number;
 
     @ManyToOne(type => Participant, participant => participant.knockoutPredictions, {nullable: false})
     participant: Participant;

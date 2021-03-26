@@ -14,6 +14,15 @@ export class MatchPredictionService {
                 private readonly matchPrediction: Repository<MatchPrediction>) {
 
     }
+async findMatches(): Promise<Match[]> {
+    const matches = await this.connection.getRepository(Match)
+        .createQueryBuilder('match')
+        .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+        .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+        .getMany();
+
+    return matches
+}
 
     async findMatchesForParticipant(firebaseIdentifier: string): Promise<MatchPrediction[]> {
         let combinedMatchPredictions = [];

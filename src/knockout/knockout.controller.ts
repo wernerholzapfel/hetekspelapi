@@ -1,21 +1,31 @@
-import {Body, Controller, Get, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, Put, Req} from '@nestjs/common';
 import {KnockoutService} from "./knockout.service";
 import {Knockout} from "./knockout.entity";
-import {CreateKnockoutDto} from "./create-knockout.dto";
+import {CreateKnockoutDto, UpdateKnockoutDto} from "./create-knockout.dto";
 
 @Controller('knockout')
 export class KnockoutController {
     constructor(private readonly service: KnockoutService) {
     }
 
-    @Get()
+    @Get('mine')
     async findKnockouts(@Req() req): Promise<Knockout[]> {
         return this.service.findKnockouts(req.user.uid);
+    }
+
+    @Get()
+    async knockoutsResults(@Req() req): Promise<Knockout[]> {
+        return this.service.getKnockoutResults();
     }
 
     @Post()
     async create(@Req() req, @Body() createKnockoutDto: CreateKnockoutDto[]) {
         return await this.service.create(createKnockoutDto)
+    }
+
+    @Put()
+    async update(@Req() req, @Body() updateKnockoutDto: UpdateKnockoutDto) {
+        return await this.service.update(updateKnockoutDto)
     }
 
 }

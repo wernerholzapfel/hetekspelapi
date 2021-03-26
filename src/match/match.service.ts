@@ -1,7 +1,7 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Connection, getManager, Repository} from 'typeorm';
 import {Match} from './match.entity';
-import {CreateMatchDto} from './create-match.dto';
+import {UpdateMatchDto} from './update-match.dto';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {InjectRepository} from '@nestjs/typeorm';
 
@@ -20,7 +20,7 @@ export class MatchService {
             .getMany();
     }
 
-    async create(item: CreateMatchDto): Promise<Match> {
+    async update(item: UpdateMatchDto): Promise<Match> {
         return await getManager().transaction(async transactionalEntityManager => {
 
             // opslaan match in database
@@ -36,14 +36,13 @@ export class MatchService {
                 const matchPredictions: MatchPrediction[] = await transactionalEntityManager
                     .getRepository(MatchPrediction).createQueryBuilder('matchPrediction')
                     .leftJoinAndSelect('matchPrediction.match', 'match')
-                    .leftJoinAndSelect('match.round', 'round')
                     .where('match.id = :matchId', {matchId: item.id})
                     .getMany();
 
                 const updatedMatchPredictions: any[] = [...matchPredictions.map(prediction => {
                     return {
                         ...prediction,
-                        punten: this.determineMatchPoints(prediction),
+                        spelpunten: this.determineMatchPoints(prediction),
                     }
                 })];
 
@@ -66,16 +65,28 @@ export class MatchService {
     }
 
     determineMatchPoints(matchPrediction: MatchPrediction): number {
+        // iets niet ingevuld
         if (isNaN(matchPrediction.homeScore) && isNaN(matchPrediction.awayScore) && isNaN(matchPrediction.match.homeScore) && isNaN(matchPrediction.match.awayScore)) {
             return null;
         }
+        // volledig goed voorspeld
         if (matchPrediction.homeScore === matchPrediction.match.homeScore && matchPrediction.awayScore === matchPrediction.match.awayScore) {
-            return 10;
+            return 30;
         }
+        // toto goed
         if (matchPrediction.homeScore - matchPrediction.awayScore === matchPrediction.match.homeScore - matchPrediction.match.awayScore
             || (matchPrediction.homeScore > matchPrediction.awayScore && matchPrediction.match.homeScore > matchPrediction.match.awayScore)
             || (matchPrediction.homeScore < matchPrediction.awayScore && matchPrediction.match.homeScore < matchPrediction.match.awayScore)) {
-            return 3;
+            // toto goed + score goed
+            if (matchPrediction.homeScore === matchPrediction.match.homeScore || matchPrediction.awayScore === matchPrediction.match.awayScore) {
+                return 20
+            } else {
+                return 15
+            }
+        }
+        // doelpunten maker goed
+        if (matchPrediction.homeScore === matchPrediction.match.homeScore || matchPrediction.awayScore === matchPrediction.match.awayScore) {
+            return 5
         } else {
             return 0
         }

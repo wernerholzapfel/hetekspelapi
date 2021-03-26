@@ -1,7 +1,7 @@
-import {Body, Controller, Get, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, Put, Req} from '@nestjs/common';
 import {MatchService} from './match.service';
 import {Match} from './match.entity';
-import {CreateMatchDto} from './create-match.dto';
+import {UpdateMatchDto} from './update-match.dto';
 
 @Controller('match')
 export class MatchController {
@@ -13,9 +13,9 @@ export class MatchController {
         return this.service.findMatches();
     }
 
-    @Post()
-    async create(@Req() req, @Body() createMatchDto: CreateMatchDto) {
-        return await this.service.create(createMatchDto)
+    @Put()
+    async create(@Req() req, @Body() createMatchDto: UpdateMatchDto) {
+        return await this.service.update(createMatchDto)
     }
 
 }

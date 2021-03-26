@@ -14,6 +14,11 @@ export class PoulePredictionController {
         return this.service.findPoulePredictionsForParticipant(req.user.uid);
     }
 
+    @Get('results')
+    async findPoulePredictionsResults(@Req() req): Promise<PoulePrediction[]> {
+        return this.service.findWerkelijkePouleResults();
+    }
+
     @Post()
     async create(@Req() req, @Body() createPoulePredictionDto: CreatePoulePredictionDto[]) {
         return await this.service.createPoulePrediction(createPoulePredictionDto, req.user.uid)

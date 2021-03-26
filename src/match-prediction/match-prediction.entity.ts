@@ -18,7 +18,7 @@ export class MatchPrediction {
     awayScore: number;
 
     @Column({nullable: true})
-    punten: number;
+    spelpunten: number;
 
     @ManyToOne(type => Participant, participant => participant.matchPredictions, {nullable: false})
     participant: Participant;
