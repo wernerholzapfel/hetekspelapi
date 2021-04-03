@@ -10,8 +10,13 @@ export class PoulePredictionController {
     }
 
     @Get()
-    async findPoulePredictionsForParticipant(@Req() req): Promise<PoulePrediction[]> {
-        return this.service.findPoulePredictionsForParticipant(req.user.uid);
+    async findPoulePredictionsForLoggedInUser(@Req() req): Promise<PoulePrediction[]> {
+        return this.service.findPoulePredictionsForLoggedInUser(req.user.uid);
+    }
+
+   @Get(':id')
+    async findPoulePredictionsForParticipant(@Req() req, @Param('id') id: string): Promise<PoulePrediction[]> {
+        return this.service.findPoulePredictionsForParticipant(id);
     }
 
     @Get('results')

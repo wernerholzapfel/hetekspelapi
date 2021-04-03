@@ -20,7 +20,7 @@ export class PoulePredictionService {
     }
 
 
-    async findPoulePredictionsForParticipant(firebaseIdentifier: string): Promise<PoulePrediction[]> {
+    async findPoulePredictionsForLoggedInUser(firebaseIdentifier: string): Promise<PoulePrediction[]> {
         const poulePredictions = await this.connection.getRepository(PoulePrediction)
             .createQueryBuilder('pouleprediction')
             .leftJoinAndSelect('pouleprediction.team', 'team')
@@ -29,7 +29,7 @@ export class PoulePredictionService {
             .getMany();
 
 
-        const matchPredictions = await this.matchPredictionService.findMatchesForParticipant(firebaseIdentifier);
+        const matchPredictions = await this.matchPredictionService.findMatchesForLoggedInUser(firebaseIdentifier);
         const poulesBasedOnMatches = [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'B'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'C'), true),
@@ -54,6 +54,17 @@ export class PoulePredictionService {
                 return line;
             }
         })
+    }
+
+    async findPoulePredictionsForParticipant(participantId: string): Promise<PoulePrediction[]> {
+        const poulePredictions = await this.connection.getRepository(PoulePrediction)
+            .createQueryBuilder('pouleprediction')
+            .leftJoinAndSelect('pouleprediction.team', 'team')
+            .leftJoin('pouleprediction.participant', 'participant')
+            .where('participant.id = :participantId', {participantId})
+            .getMany();
+
+        return poulePredictions
     }
 
     async findWerkelijkePouleResults(): Promise<PoulePrediction[]> {
