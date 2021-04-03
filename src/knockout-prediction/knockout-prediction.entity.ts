@@ -15,8 +15,26 @@ export class KnockoutPrediction {
     @ManyToOne(type => Team, team => team.knockoutsPredictions)
     selectedTeam: Team;
 
+    @ManyToOne(type => Team, team => team.knockoutsPredictions)
+    homeTeam: Team;
+
+    @Column({default: false})
+    homeInRound: boolean
+
+    @Column({default: false})
+    awayInRound: boolean
+
+    @ManyToOne(type => Team, team => team.knockoutsPredictions)
+    awayTeam: Team;
+
     @Column({nullable: true})
-    spelpunten: number;
+    homeSpelpunten: number;
+
+    @Column({nullable: true})
+    awaySpelpunten: number;
+
+    @Column({nullable: true})
+    winnerSpelpunten: number;
 
     @ManyToOne(type => Participant, participant => participant.knockoutPredictions, {nullable: false})
     participant: Participant;

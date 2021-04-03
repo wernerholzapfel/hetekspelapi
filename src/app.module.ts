@@ -17,6 +17,7 @@ import {Knockout} from "./knockout/knockout.entity";
 import {KnockoutModule} from "./knockout/knockout.module";
 import {KnockoutPrediction} from "./knockout-prediction/knockout-prediction.entity";
 import {KnockoutPredictionModule} from "./knockout-prediction/knockout-prediction.module";
+import {StandModule} from "./stand/stand.module";
 
 @Module({
     imports: [
@@ -43,7 +44,8 @@ import {KnockoutPredictionModule} from "./knockout-prediction/knockout-predictio
         MatchPredictionModule,
         PoulePredictionModule,
         KnockoutModule,
-        KnockoutPredictionModule
+        KnockoutPredictionModule,
+        StandModule
     ],
     controllers: [AppController],
     providers: [AppService],

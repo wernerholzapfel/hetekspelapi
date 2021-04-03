@@ -14,6 +14,11 @@ export class KnockoutPredictionController {
         return this.service.findKnockoutForParticipant(req.user.uid);
     }
 
+    @Get(':id')
+    async findKnockoutForParticipant(@Req() req, @Param('id') id: string): Promise<KnockoutPrediction[]> {
+        return this.service.findKnockoutForParticipant(id);
+    }
+
     @Post()
     async create(@Req() req, @Body() createKnockoutPredictionDtos: CreateKnockoutPredictionDto[]) {
         return await this.service.createKnockoutPrediction(createKnockoutPredictionDtos, req.user.uid)

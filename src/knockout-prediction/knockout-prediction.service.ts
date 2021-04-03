@@ -15,8 +15,20 @@ export class KnockoutPredictionService {
 
     }
 
-    async findKnockoutForParticipant(firebaseIdentifier: string): Promise<KnockoutPrediction[]> {
-        return [];
+    async findKnockoutForParticipant(participantId: string): Promise<KnockoutPrediction[]> {
+        return await this.connection
+            .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+            .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
+            .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
+            .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
+            .leftJoinAndSelect('knockoutPrediction.knockout' , 'knockout')
+            .leftJoinAndSelect('knockout.homeTeam', 'kohomeTeam')
+            .leftJoinAndSelect('knockout.awayTeam', 'koawayTeam')
+            .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
+            .where('participant.id = :participantId', {participantId})
+            .getMany();
+
     }
 
     async createKnockoutPrediction(items: CreateKnockoutPredictionDto[], firebaseIdentifier): Promise<KnockoutPrediction[]> {
