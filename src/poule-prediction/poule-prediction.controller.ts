@@ -19,7 +19,7 @@ export class PoulePredictionController {
         return this.service.findPoulePredictionsForParticipant(id);
     }
 
-    @Get('results')
+    @Get('admin/results')
     async findPoulePredictionsResults(@Req() req): Promise<PoulePrediction[]> {
         return this.service.findWerkelijkePouleResults();
     }
