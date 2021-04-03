@@ -24,7 +24,7 @@ async findMatches(): Promise<Match[]> {
     return matches
 }
 
-    async findMatchesForParticipant(firebaseIdentifier: string): Promise<MatchPrediction[]> {
+    async findMatchesForLoggedInUser(firebaseIdentifier: string): Promise<MatchPrediction[]> {
         let combinedMatchPredictions = [];
         const matches = await this.connection.getRepository(Match)
             .createQueryBuilder('match')
@@ -56,6 +56,20 @@ async findMatches(): Promise<Match[]> {
             });
         }
         return combinedMatchPredictions;
+    }
+
+    async findMatchesForParticipant(participantId: string): Promise<MatchPrediction[]> {
+        const matchPredictions = await this.connection.getRepository(MatchPrediction)
+            .createQueryBuilder('matchprediction')
+            .leftJoin('matchprediction.participant', 'participant')
+            .leftJoinAndSelect('matchprediction.match', 'match')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .where('participant.id = :participantId', {participantId})
+            .orderBy('match.ordering')
+            .getMany();
+
+        return matchPredictions;
     }
 
     async createMatchPrediction(items: CreateMatchPredictionDto[], firebaseIdentifier): Promise<MatchPrediction[]> {

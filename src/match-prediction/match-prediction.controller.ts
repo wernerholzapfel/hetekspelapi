@@ -10,10 +10,14 @@ export class MatchPredictionController {
     }
 
     @Get()
-    async findMatchesForParticipant(@Req() req): Promise<MatchPrediction[]> {
-        return this.service.findMatchesForParticipant(req.user.uid);
+    async findMatchesForLoggedInUser(@Req() req): Promise<MatchPrediction[]> {
+        return this.service.findMatchesForLoggedInUser(req.user.uid);
     }
 
+    @Get(':id')
+    async findMatchesForParticipant(@Req() req,  @Param('id') id: string): Promise<MatchPrediction[]> {
+        return this.service.findMatchesForParticipant(id);
+    }
     @Post()
     async create(@Req() req, @Body() createMatchPredictionDto: CreateMatchPredictionDto[]) {
         return await this.service.createMatchPrediction(createMatchPredictionDto, req.user.uid)
