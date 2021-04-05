@@ -20,6 +20,17 @@ export class MatchService {
             .getMany();
     }
 
+    async findMatch(matchId): Promise<Match> {
+        return await this.connection.getRepository(Match)
+            .createQueryBuilder('match')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .leftJoinAndSelect('match.matchPredictions', 'matchPredictions')
+            .leftJoinAndSelect('matchPredictions.participant', 'participant')
+            .where('match.id = :matchId', {matchId})
+            .getOne();
+    }
+
     async update(item: UpdateMatchDto): Promise<Match> {
         return await getManager().transaction(async transactionalEntityManager => {
 
