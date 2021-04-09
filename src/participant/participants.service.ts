@@ -39,7 +39,7 @@ export class ParticipantsService {
             .createQueryBuilder()
             .update(Participant)
             .set({pushToken: body.pushtoken})
-            .where("firebaseIdentifier", {firebaseIdentifier})
+            .where("firebaseIdentifier = :firebaseIdentifier", {firebaseIdentifier})
             .execute();
     }
 }
