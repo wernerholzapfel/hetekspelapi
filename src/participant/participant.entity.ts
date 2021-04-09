@@ -25,7 +25,7 @@ export class Participant {
     @Column({select: false})
     firebaseIdentifier: string;
 
-    @Column({select: false})
+    @Column({select: false, nullable: true})
     pushToken: string;
 
     @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.participant)
