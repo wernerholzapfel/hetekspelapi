@@ -22,7 +22,7 @@ export class NotificationService {
                 messagingDevicesResponse.push(await admin.messaging().sendToDevice(p.pushToken, {
                     notification: {
                         title: 'Het EK Spel',
-                        body: `Hoi ${p.displayName} de stand is bijgewerkt`,
+                        body: `Hoi ${p.displayName} de stand is bijgewerkt ${new Date}`,
                         badge: '1'
                     }
                 }, {}));
