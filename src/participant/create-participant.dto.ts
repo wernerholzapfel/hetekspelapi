@@ -6,3 +6,7 @@ export class CreateParticipantDto {
     @IsDefined() @IsString() readonly teamName: string;
 
 }
+
+export class AddPushTokenDto {
+    @IsDefined() @IsString() readonly pushtoken: string;
+}

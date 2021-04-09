@@ -1,6 +1,6 @@
-import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Post, Put, Req} from '@nestjs/common';
 
-import {CreateParticipantDto} from './create-participant.dto';
+import {AddPushTokenDto, CreateParticipantDto} from './create-participant.dto';
 import {ParticipantsService} from './participants.service';
 import 'dotenv/config';
 import {Participant} from './participant.entity';
@@ -22,5 +22,10 @@ export class ParticipantController {
         this.logger.log('post participant');
         const newParticipant = Object.assign({}, createParticipantDto);
         return await this.participantsService.create(newParticipant, req.user.email, req.user.uid);
+    }
+
+    @Put('pushtoken')
+    async addPushtoken(@Req() req, @Body() addPushTokenDto: AddPushTokenDto) {
+        return await this.participantsService.addPushToken(addPushTokenDto, req.user.uid);
     }
 }

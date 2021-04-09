@@ -56,11 +56,10 @@ export class AppModule {
 
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
+            {path: '/**', method: RequestMethod.PUT},
             {path: '/match-prediction', method: RequestMethod.GET},
-            {path: '/match-prediction', method: RequestMethod.POST},
             {path: '/knockout/mine', method: RequestMethod.GET},
             {path: '/knockout-prediction', method: RequestMethod.POST},
-            {path: '/poule-prediction', method: RequestMethod.GET},
-            {path: '/poule-prediction', method: RequestMethod.POST});
+            {path: '/poule-prediction', method: RequestMethod.GET});
     }
 }

@@ -1,9 +1,9 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {Repository} from 'typeorm';
+import {getConnection, Repository, UpdateResult} from 'typeorm';
 
 import {Participant} from './participant.entity';
 import {InjectRepository} from '@nestjs/typeorm';
-import {CreateParticipantDto} from './create-participant.dto';
+import {AddPushTokenDto, CreateParticipantDto} from './create-participant.dto';
 
 // import * as admin from 'firebase-admin';
 
@@ -32,5 +32,14 @@ export class ParticipantsService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+    }
+
+    async addPushToken(body: AddPushTokenDto, firebaseIdentifier: string): Promise<UpdateResult> {
+        return await getConnection()
+            .createQueryBuilder()
+            .update(Participant)
+            .set({pushToken: body.pushtoken})
+            .where("firebaseIdentifier", {firebaseIdentifier})
+            .execute();
     }
 }
