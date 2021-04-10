@@ -19,6 +19,8 @@ import {KnockoutPrediction} from "./knockout-prediction/knockout-prediction.enti
 import {KnockoutPredictionModule} from "./knockout-prediction/knockout-prediction.module";
 import {StandModule} from "./stand/stand.module";
 import { NotificationModule } from './notification/notification.module';
+import { PushtokenModule } from './pushtoken/pushtoken.module';
+import {Pushtoken} from "./pushtoken/pushtoken.entity";
 
 @Module({
     imports: [
@@ -35,7 +37,8 @@ import { NotificationModule } from './notification/notification.module';
                 MatchPrediction,
                 PoulePrediction,
                 Knockout,
-                KnockoutPrediction
+                KnockoutPrediction,
+                Pushtoken
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
@@ -47,7 +50,8 @@ import { NotificationModule } from './notification/notification.module';
         KnockoutModule,
         KnockoutPredictionModule,
         StandModule,
-        NotificationModule
+        NotificationModule,
+        PushtokenModule
     ],
     controllers: [AppController],
     providers: [AppService],

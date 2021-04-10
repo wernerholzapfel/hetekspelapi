@@ -9,6 +9,7 @@ import {
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import {PoulePrediction} from "../poule-prediction/poule-prediction.entity";
+import {Pushtoken} from "../pushtoken/pushtoken.entity";
 
 @Entity()
 @Index(['firebaseIdentifier'], {unique: true})
@@ -25,8 +26,8 @@ export class Participant {
     @Column({select: false})
     firebaseIdentifier: string;
 
-    @Column({select: false, nullable: true})
-    pushToken: string;
+    @OneToMany(type => Pushtoken, pushtoken => pushtoken.participant)
+    pushTokens: Pushtoken[];
 
     @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.participant)
     matchPredictions: MatchPrediction[];

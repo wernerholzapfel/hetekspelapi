@@ -1,9 +1,11 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {getConnection, Repository, UpdateResult} from 'typeorm';
+import {Connection, getConnection, Repository, UpdateResult} from 'typeorm';
 
 import {Participant} from './participant.entity';
 import {InjectRepository} from '@nestjs/typeorm';
 import {AddPushTokenDto, CreateParticipantDto} from './create-participant.dto';
+import {Pushtoken} from "../pushtoken/pushtoken.entity";
+import * as Http from "http";
 
 // import * as admin from 'firebase-admin';
 
@@ -12,7 +14,9 @@ export class ParticipantsService {
     private readonly logger = new Logger('participantService', true);
 
     constructor(@InjectRepository(Participant)
-                private readonly participantRepository: Repository<Participant>) {
+                private readonly participantRepository: Repository<Participant>,
+                private readonly connection: Connection
+    ) {
     }
 
     async findAll(): Promise<Participant[]> {
@@ -34,12 +38,32 @@ export class ParticipantsService {
             });
     }
 
-    async addPushToken(body: AddPushTokenDto, firebaseIdentifier: string): Promise<UpdateResult> {
-        return await getConnection()
-            .createQueryBuilder()
-            .update(Participant)
-            .set({pushToken: body.pushtoken})
-            .where("firebaseIdentifier = :firebaseIdentifier", {firebaseIdentifier})
-            .execute();
+    async addPushToken(body: AddPushTokenDto, firebaseIdentifier: string): Promise<({ pushToken: string; participant: Participant } & Pushtoken) | void> {
+        const participant = await this.connection.getRepository(Participant)
+            .createQueryBuilder('participant')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .getOne();
+
+        const pushtokenRecord = await this.connection.getRepository(Pushtoken)
+            .createQueryBuilder('pushtoken')
+            .where('{pushtoken = :pushtoken', {pushtoken: body.pushtoken})
+            .getCount()
+
+        if (pushtokenRecord < 1) {
+            return await this.connection.getRepository(Pushtoken)
+                .save({participant: participant, pushToken: body.pushtoken})
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        } else {
+            throw new HttpException({
+                message: 'pushtoken al bekend',
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
+
     }
 }

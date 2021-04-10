@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
-import {Connection} from "typeorm";
+import {Connection, getConnection} from "typeorm";
 import * as admin from "firebase-admin";
-import {Participant} from "../participant/participant.entity";
+import {Pushtoken} from "../pushtoken/pushtoken.entity";
 
 @Injectable()
 export class NotificationService {
@@ -10,24 +10,64 @@ export class NotificationService {
     }
 
     async sendNotification(): Promise<admin.messaging.MessagingDevicesResponse[]> {
-        const participants: any = await this.connection
-            .getRepository(Participant)
-            .createQueryBuilder('participant')
-            .select(['participant.displayName', 'participant.pushToken',])
+        const pushtokens: Pushtoken[] = await this.connection
+            .getRepository(Pushtoken)
+            .createQueryBuilder('pushtoken')
+            .leftJoin('pushtoken.participant', 'participant')
+            .select(['participant.id', 'participant.displayName', 'pushToken'])
             .where('participant.pushToken is not NULL')
             .getMany();
 
-        const messagingDevicesResponse: admin.messaging.MessagingDevicesResponse[] = []
-        return participants.map(async p => {
-                messagingDevicesResponse.push(await admin.messaging().sendToDevice(p.pushToken, {
+
+        const messagingDevicesResponse: any[] = []
+        await pushtokens.forEach(async token => {
+                await admin.messaging().sendToDevice(token.pushToken, {
                     notification: {
                         title: 'Het EK Spel',
-                        body: `Hoi ${p.displayName} de stand is bijgewerkt ${new Date}`,
+                        body: `Hoi ${token.participant.displayName} de stand is bijgewerkt ${new Date}`,
                         badge: '1'
                     }
-                }, {}));
+                }, {})
+                    .then(async response => {
+                        await messagingDevicesResponse.push({...response, token: token})
+                    })
+                    .catch(async error => await console.log(error))
             }
         )
+        await this.cleanupTokens(messagingDevicesResponse)
+            .then(succes => console.log('succes'))
+            .catch(error => console.log('error: ' + error))
+            .finally(() => console.log('final cleanup'))
+
+        return messagingDevicesResponse;
+    }
+
+    // Cleans up the tokens that are no longer valid.
+    async cleanupTokens(responses) {
+        console.log(responses.length)
+        // For each notification we check if there was an error.
+        const tokensDelete = [];
+        await responses.forEach((response) => {
+            response.results.forEach((result) => {
+                const error = result.error;
+                if (error) {
+                    console.log(response.participant)
+                    console.error('Failure sending notification to', response.token.participant.displayName);
+                    // Cleanup the tokens who are not registered anymore.
+                    if (error.code === 'messaging/invalid-registration-token' ||
+                        error.code === 'messaging/registration-token-not-registered') {
+                        console.log('delete this token: ' + response.token.pushToken)
+                        this.connection
+                            .createQueryBuilder()
+                            .update(Pushtoken)
+                            .set({pushToken: null})
+                            .where("id = :id", {id: response.token.participant.id})
+                            .execute();
+                    }
+                }
+            });
+        })
+        return Promise.all(tokensDelete);
     }
 }
 
