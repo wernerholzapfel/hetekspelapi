@@ -14,13 +14,14 @@ export class NotificationService {
             .getRepository(Pushtoken)
             .createQueryBuilder('pushtoken')
             .leftJoin('pushtoken.participant', 'participant')
-            .select(['participant.id', 'participant.displayName', 'pushToken'])
-            .where('pushToken is not NULL')
+            .select(['participant.id', 'participant.displayName', 'pushtoken.pushToken'])
+            .where('pushtoken.pushToken is not NULL')
             .getMany();
 
 
         const messagingDevicesResponse: any[] = []
         await pushtokens.forEach(async token => {
+            console.log(token);
                 await admin.messaging().sendToDevice(token.pushToken, {
                     notification: {
                         title: 'Het EK Spel',
