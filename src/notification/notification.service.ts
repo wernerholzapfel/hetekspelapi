@@ -15,7 +15,7 @@ export class NotificationService {
             .createQueryBuilder('pushtoken')
             .leftJoin('pushtoken.participant', 'participant')
             .select(['participant.id', 'participant.displayName', 'pushToken'])
-            .where('participant.pushToken is not NULL')
+            .where('pushToken is not NULL')
             .getMany();
 
 
