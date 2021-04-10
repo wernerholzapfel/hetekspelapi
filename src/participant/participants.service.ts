@@ -46,7 +46,7 @@ export class ParticipantsService {
 
         const pushtokenRecord = await this.connection.getRepository(Pushtoken)
             .createQueryBuilder('pushtoken')
-            .where('{pushtoken.pushToken = :pushtoken', {pushtoken: body.pushtoken})
+            .where('pushtoken.pushToken = :pushtoken', {pushtoken: body.pushtoken})
             .getCount()
 
         if (pushtokenRecord < 1) {
