@@ -2,6 +2,8 @@ import {Injectable, Logger} from '@nestjs/common';
 import {Connection} from 'typeorm';
 import {Participant} from '../participant/participant.entity';
 import * as admin from 'firebase-admin';
+import {Hetekspel} from "../hetekspel/hetekspel.entity";
+import {Match} from "../match/match.entity";
 
 @Injectable()
 export class StandService {
@@ -98,33 +100,75 @@ export class StandService {
     }
 
     async getTotalStand(): Promise<any[]> {
+        // haal op wat de vorige standnummer was en bepaal wat nieuwe stand nummer wordt
+        // indien vorige gelijk is aan huidige, overschrijven.
+        // indien vorige groter is dan huidige, huidige overschrijven met nieuwe en vorige met huidige overschrijven.
+        // we slaan dan twee standen op (voor snelheid?) current en previous? of 1 stand en berekenen alles hier...
+
+        const hetEkspel: Hetekspel = await this.connection.getRepository(Hetekspel).findOne();
+        // const maxMatchId: Match = await this.connection
+        //     .getRepository(Match)
+        //     .createQueryBuilder('match')
+        //     .select('match.ordering')
+        //     .where('match.homeScore is not Null')
+        //     .orderBy('match.ordering', "DESC")
+        //     .getOne()
+        //
+        // console.log(maxMatchId);
 
         const participants: any = await this.connection
             .getRepository(Participant)
             .createQueryBuilder('participant')
-            .select(['participant.displayName', 'participant.id','matchPredictions.spelpunten'])
+            .select(['participant.displayName', 'participant.id', 'matchPredictions.spelpunten'])
             .addSelect('poulePredictions.spelpunten')
             .addSelect('knockoutPredictions.homeSpelpunten')
             .addSelect('knockoutPredictions.awaySpelpunten')
             .addSelect('knockoutPredictions.winnerSpelpunten')
+            .addSelect('knockout.ordering')
+            .addSelect('match.ordering')
             .leftJoin('participant.matchPredictions', 'matchPredictions')
+            .leftJoin('matchPredictions.match', 'match')
             .leftJoin('participant.poulePredictions', 'poulePredictions')
             .leftJoin('participant.knockoutPredictions', 'knockoutPredictions')
+            .leftJoin('knockoutPredictions.knockout', 'knockout')
             .getMany();
 
-        this.logger.log(participants);
-        const stand = participants
+        const previousTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, hetEkspel.currentTable))
+        const currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, 100))
+
+        const stand = currentTable.map(t => {
+            return {
+                ...t,
+                deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
+                deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
+                deltaMatchPoints: t.matchPoints - previousTable.find(pt => pt.id === t.id).matchPoints
+            }
+        })
+        return this.getSortedPositionStand(stand);
+    }
+
+
+    createStandTillMatchId(participants: any[], matchId: number) {
+        return participants
             .map(participant => {
                 return {
                     ...participant,
                     matchPoints: participant.matchPredictions.reduce((a, b) => {
-                        return a + b.spelpunten;
+                        if (b.match.ordering <= matchId) {
+                            return a + b.spelpunten;
+                        } else {
+                            return a;
+                        }
                     }, 0),
                     poulePoints: participant.poulePredictions.reduce((a, b) => {
                         return a + b.spelpunten;
                     }, 0),
                     knockoutPoints: participant.knockoutPredictions.reduce((a, b) => {
-                        return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
+                        if (b.knockout.ordering <= matchId) {
+                            return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
+                        } else {
+                            return a;
+                        }
                     }, 0),
                 };
             }).map(participant => {
@@ -141,8 +185,6 @@ export class StandService {
             .sort((a, b) => {
                 return b.totalPoints - a.totalPoints;
             });
-
-        return this.getSortedPositionStand(stand);
     }
 
 }

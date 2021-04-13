@@ -17,6 +17,7 @@ export class MatchService {
             .createQueryBuilder('match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .orderBy('match.ordering')
             .getMany();
     }
 

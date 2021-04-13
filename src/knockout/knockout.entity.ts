@@ -17,6 +17,9 @@ export class Knockout {
     id: string;
 
     @Column()
+    ordering: number;
+
+    @Column()
     matchId: string;
 
     @Column()

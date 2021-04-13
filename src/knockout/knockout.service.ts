@@ -27,6 +27,7 @@ export class KnockoutService {
             .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
             .leftJoinAndMapOne('knockout.prediction', 'knockout.knockoutPredictions', 'knockoutPredictions', "knockoutPredictions.participant.id = :participantId", {participantId: participant.id})
             .leftJoinAndSelect('knockoutPredictions.selectedTeam', 'selectedTeam')
+            .orderBy('knockout.matchId')
             .getMany();
 
         return knockout.map(ko => {
@@ -46,6 +47,7 @@ export class KnockoutService {
             .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
             .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
             .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
+            .orderBy('knockout.matchId')
             .getMany();
 
         return knockout.map(ko => {

@@ -21,6 +21,8 @@ import {StandModule} from "./stand/stand.module";
 import { NotificationModule } from './notification/notification.module';
 import { PushtokenModule } from './pushtoken/pushtoken.module';
 import {Pushtoken} from "./pushtoken/pushtoken.entity";
+import {Hetekspel} from "./hetekspel/hetekspel.entity";
+import { HetekspelModule } from './hetekspel/hetekspel.module';
 
 @Module({
     imports: [
@@ -38,7 +40,8 @@ import {Pushtoken} from "./pushtoken/pushtoken.entity";
                 PoulePrediction,
                 Knockout,
                 KnockoutPrediction,
-                Pushtoken
+                Pushtoken,
+                Hetekspel,
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
@@ -51,7 +54,8 @@ import {Pushtoken} from "./pushtoken/pushtoken.entity";
         KnockoutPredictionModule,
         StandModule,
         NotificationModule,
-        PushtokenModule
+        PushtokenModule,
+        HetekspelModule
     ],
     controllers: [AppController],
     providers: [AppService],
