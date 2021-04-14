@@ -27,6 +27,12 @@ export class Team {
     @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.selectedTeam)
     knockoutsPredictions: KnockoutPrediction[];
 
+    @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.homeTeam)
+    knockoutsHomePredictions: KnockoutPrediction[];
+
+    @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.awayTeam || knockoutPrediction.homeTeam)
+    knockoutsAwayPredictions: KnockoutPrediction[];
+
     @OneToMany(type => PoulePrediction, poulePrediction => poulePrediction.team)
     poulePredictions: PoulePrediction[];
 

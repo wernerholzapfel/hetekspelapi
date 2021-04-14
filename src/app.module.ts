@@ -25,6 +25,7 @@ import {Hetekspel} from "./hetekspel/hetekspel.entity";
 import { HetekspelModule } from './hetekspel/hetekspel.module';
 import { HeadlineModule } from './headline/headline.module';
 import {Headline} from "./headline/headline.entity";
+import { StatsModule } from './stats/stats.module';
 
 @Module({
     imports: [
@@ -59,7 +60,8 @@ import {Headline} from "./headline/headline.entity";
         NotificationModule,
         PushtokenModule,
         HetekspelModule,
-        HeadlineModule
+        HeadlineModule,
+        StatsModule
     ],
     controllers: [AppController],
     providers: [AppService],
