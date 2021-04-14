@@ -14,8 +14,11 @@ export class StatsService {
     }
 
     async createTotoStats(): Promise<any[]> {
-        let matches: any[] = await this.connection.getRepository(Match).createQueryBuilder('match')
+        let matches: any[] = await this.connection.getRepository(Match)
+            .createQueryBuilder('match')
             .leftJoinAndSelect('match.matchPredictions', 'matchPredictions')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
             .orderBy('match.ordering')
             .getMany()
 
@@ -30,7 +33,6 @@ export class StatsService {
                 })
             }
         })
-
         matches = matches.map(m => {
             return {
                 ...m,
@@ -116,7 +118,7 @@ export class StatsService {
 
     getNumberOfPredictedForRound(knockoutPredictions, team, round) {
         return knockoutPredictions.filter(kp =>
-            kp.knockout.round === round && (kp.homeTeam.id === team.id || kp.awayTeam === team.id)).length
+            kp.knockout.round === round && (kp.homeTeam.id === team.id || kp.awayTeam.id === team.id)).length
     }
 
     getNumberOfSelectedForRound(knockoutPredictions, team, round) {
