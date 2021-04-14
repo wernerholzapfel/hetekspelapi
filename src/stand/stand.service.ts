@@ -141,6 +141,8 @@ export class StandService {
                 ...t,
                 deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
                 deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
+                deltePoulePoints: t.poulePoints - previousTable.find(pt => pt.id === t.id).poulePoints,
+                deltaKnockoutPoints: t.knockoutPoints - previousTable.find(pt => pt.id === t.id).knockoutPoints,
                 deltaMatchPoints: t.matchPoints - previousTable.find(pt => pt.id === t.id).matchPoints
             }
         })
