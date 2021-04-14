@@ -41,9 +41,9 @@ export class PoulePrediction {
     @ManyToOne(type => Participant, participant => participant.matchPredictions, {nullable: false})
     participant: Participant;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

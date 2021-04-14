@@ -17,6 +17,10 @@ export class ParticipantController {
         return this.participantsService.findAll();
     }
 
+    @Get('mine')
+    async find(@Req() req): Promise<Participant> {
+        return this.participantsService.find(req.user.uid);
+    }
     @Post()
     async create(@Req() req, @Body() createParticipantDto: CreateParticipantDto) {
         this.logger.log('post participant');

@@ -42,9 +42,9 @@ export class Match {
     @ManyToOne(type => Team, team => team.matches)
     awayTeam: Team;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

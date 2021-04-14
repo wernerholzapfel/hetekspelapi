@@ -23,9 +23,9 @@ export class Pushtoken {
     participant: Participant;
 
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

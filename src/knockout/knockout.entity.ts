@@ -55,9 +55,9 @@ export class Knockout {
     @ManyToOne(type => Team, team => team.matches) // todo fix this
     winnerTeam: Team;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

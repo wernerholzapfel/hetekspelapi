@@ -27,6 +27,7 @@ export class KnockoutPredictionService {
             .leftJoinAndSelect('knockout.awayTeam', 'koawayTeam')
             .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
             .where('participant.id = :participantId', {participantId})
+            .orderBy('knockout.ordering', "ASC")
             .getMany();
 
     }

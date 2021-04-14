@@ -25,6 +25,12 @@ export class ParticipantsService {
         });
     }
 
+    async find(firebaseIdentifier: string): Promise<Participant> {
+        return await this.connection.getRepository(Participant)
+            .createQueryBuilder('participant')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .getOne();    }
+
     async create(participant: CreateParticipantDto, email: string, uid: string): Promise<Participant> {
         const newParticipant: Participant = Object.assign(participant);
         newParticipant.email = email.toLowerCase();

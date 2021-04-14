@@ -39,9 +39,9 @@ export class KnockoutPrediction {
     @ManyToOne(type => Participant, participant => participant.knockoutPredictions, {nullable: false})
     participant: Participant;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

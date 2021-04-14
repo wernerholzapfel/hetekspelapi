@@ -4,6 +4,7 @@ import {Participant} from '../participant/participant.entity';
 import * as admin from 'firebase-admin';
 import {Hetekspel} from "../hetekspel/hetekspel.entity";
 import {Match} from "../match/match.entity";
+import {Knockout} from "../knockout/knockout.entity";
 
 @Injectable()
 export class StandService {
@@ -105,16 +106,28 @@ export class StandService {
         // indien vorige groter is dan huidige, huidige overschrijven met nieuwe en vorige met huidige overschrijven.
         // we slaan dan twee standen op (voor snelheid?) current en previous? of 1 stand en berekenen alles hier...
 
+        const db = admin.database();
+        let previousTable = [];
         const hetEkspel: Hetekspel = await this.connection.getRepository(Hetekspel).findOne();
-        // const maxMatchId: Match = await this.connection
-        //     .getRepository(Match)
-        //     .createQueryBuilder('match')
-        //     .select('match.ordering')
-        //     .where('match.homeScore is not Null')
-        //     .orderBy('match.ordering', "DESC")
-        //     .getOne()
-        //
-        // console.log(maxMatchId);
+
+        let maxMatchId: any = await this.connection
+            .getRepository(Knockout)
+            .createQueryBuilder('knockout')
+            .select('knockout.ordering')
+            .where('knockout.homeScore is not Null')
+            .orderBy('knockout.ordering', "DESC")
+            .getOne()
+
+        if (!maxMatchId) {
+            maxMatchId = await this.connection
+                .getRepository(Match)
+                .createQueryBuilder('match')
+                .select('match.ordering')
+                .where('match.homeScore is not Null')
+                .orderBy('match.ordering', "DESC")
+                .getOne()
+        }
+
 
         const participants: any = await this.connection
             .getRepository(Participant)
@@ -133,20 +146,33 @@ export class StandService {
             .leftJoin('knockoutPredictions.knockout', 'knockout')
             .getMany();
 
-        const previousTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, hetEkspel.currentTable))
-        const currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, 100))
+        const previousTableRef = db.ref(hetEkspel.currentTable.toString());
+        await previousTableRef.once('value', async table => {
+            previousTable = table.val()
+        });
 
-        const stand = currentTable.map(t => {
-            return {
-                ...t,
-                deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
-                deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
-                deltePoulePoints: t.poulePoints - previousTable.find(pt => pt.id === t.id).poulePoints,
-                deltaKnockoutPoints: t.knockoutPoints - previousTable.find(pt => pt.id === t.id).knockoutPoints,
-                deltaMatchPoints: t.matchPoints - previousTable.find(pt => pt.id === t.id).matchPoints
-            }
-        })
-        return this.getSortedPositionStand(stand);
+        let currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, maxMatchId.ordering))
+
+        if (previousTable && previousTable.length > 0) {
+            currentTable = currentTable.map(t => {
+                return {
+                    ...t,
+                    deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
+                    deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
+                    deltePoulePoints: t.poulePoints - previousTable.find(pt => pt.id === t.id).poulePoints,
+                    deltaKnockoutPoints: t.knockoutPoints - previousTable.find(pt => pt.id === t.id).knockoutPoints,
+                    deltaMatchPoints: t.matchPoints - previousTable.find(pt => pt.id === t.id).matchPoints
+                }
+            })
+        }
+
+        const docRef = db.ref(`${maxMatchId.ordering}`);
+        docRef.set(currentTable);
+
+        await this.connection.getRepository(Hetekspel)
+            .save({...hetEkspel, currentTable: maxMatchId.ordering})
+
+        return currentTable;
     }
 
 

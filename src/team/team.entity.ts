@@ -30,9 +30,9 @@ export class Team {
     @OneToMany(type => PoulePrediction, poulePrediction => poulePrediction.team)
     poulePredictions: PoulePrediction[];
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }

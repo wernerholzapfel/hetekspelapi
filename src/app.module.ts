@@ -23,6 +23,8 @@ import { PushtokenModule } from './pushtoken/pushtoken.module';
 import {Pushtoken} from "./pushtoken/pushtoken.entity";
 import {Hetekspel} from "./hetekspel/hetekspel.entity";
 import { HetekspelModule } from './hetekspel/hetekspel.module';
+import { HeadlineModule } from './headline/headline.module';
+import {Headline} from "./headline/headline.entity";
 
 @Module({
     imports: [
@@ -42,6 +44,7 @@ import { HetekspelModule } from './hetekspel/hetekspel.module';
                 KnockoutPrediction,
                 Pushtoken,
                 Hetekspel,
+                Headline,
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
@@ -55,7 +58,8 @@ import { HetekspelModule } from './hetekspel/hetekspel.module';
         StandModule,
         NotificationModule,
         PushtokenModule,
-        HetekspelModule
+        HetekspelModule,
+        HeadlineModule
     ],
     controllers: [AppController],
     providers: [AppService],
@@ -67,6 +71,7 @@ export class AppModule {
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: '/**', method: RequestMethod.PUT},
+            {path: '/participant/mine', method: RequestMethod.GET},
             {path: '/match-prediction', method: RequestMethod.GET},
             {path: '/knockout/mine', method: RequestMethod.GET},
             {path: '/knockout-prediction', method: RequestMethod.POST},

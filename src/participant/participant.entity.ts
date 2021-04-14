@@ -38,9 +38,9 @@ export class Participant {
     @OneToMany(type => PoulePrediction, poulePrediction => poulePrediction.participant)
     poulePredictions: PoulePrediction[];
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
 }
