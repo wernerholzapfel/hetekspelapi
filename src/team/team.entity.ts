@@ -21,8 +21,14 @@ export class Team {
     @OneToMany(type => Match, match => match.homeTeam)
     matches: Match[];
 
-    @OneToMany(type => Knockout, knockout => knockout.homeTeam || knockout.awayTeam)
-    knockouts: Knockout[];
+    @OneToMany(type => Knockout, knockout => knockout.homeTeam)
+    knockoutsHome: Knockout[];
+
+    @OneToMany(type => Knockout, knockout => knockout.awayTeam)
+    knockoutsAway: Knockout[];
+
+    @OneToMany(type => Knockout, knockout => knockout.winnerTeam)
+    knockoutsWinner: Knockout[];
 
     @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.selectedTeam)
     knockoutsPredictions: KnockoutPrediction[];

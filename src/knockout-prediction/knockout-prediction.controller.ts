@@ -19,6 +19,11 @@ export class KnockoutPredictionController {
         return this.service.findKnockoutForParticipant(id);
     }
 
+    @Get('round/:roundid/team/:teamid')
+    async findKnockoutForTeamInRound(@Req() req, @Param('roundid') roundId: string, @Param('teamid') teamId: string): Promise<KnockoutPrediction[]> {
+        return this.service.findKnockoutForTeamInRound(roundId, teamId);
+    }
+
     @Post()
     async create(@Req() req, @Body() createKnockoutPredictionDtos: CreateKnockoutPredictionDto[]) {
         return await this.service.createKnockoutPrediction(createKnockoutPredictionDtos, req.user.uid)
