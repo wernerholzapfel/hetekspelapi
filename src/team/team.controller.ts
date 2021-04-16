@@ -15,12 +15,6 @@ export class TeamController {
         return this.service.getAll();
     }
 
-    // @Post()
-    // async create(@Req() req, @Body() createDto: CreateTeamDto) {
-    //     const newObject = Object.assign({}, createDto);
-    //     return await this.service.create(newObject);
-    // }
-
     @Put()
     async update(@Req() req, @Body() UpdateTeamPositionDto: UpdateTeamPositionDto[]) {
         return await this.service.update(UpdateTeamPositionDto);

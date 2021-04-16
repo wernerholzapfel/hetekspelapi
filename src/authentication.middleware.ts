@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import 'dotenv/config';
 import * as admin from 'firebase-admin';
+import {getRepository} from "typeorm";
+import {Hetekspel} from "./hetekspel/hetekspel.entity";
 
 @Injectable()
 export class AddFireBaseUserToRequest implements NestMiddleware {
@@ -54,6 +56,7 @@ export class AdminMiddleware implements NestMiddleware {
                     this.logger.log('ik ben admin');
                     next();
                 } else {
+
                     next(new ForbiddenException('Om wijzigingen door te kunnen voeren moet je admin zijn'));
                 }
             });
@@ -66,55 +69,21 @@ export class AdminMiddleware implements NestMiddleware {
 
 @Injectable()
 export class IsRegistrationClosed implements NestMiddleware {
-    private readonly logger = new Logger('AdminMiddleware', true);
+    private readonly logger = new Logger('IsRegistrationClosed', true);
 
     use(req, res, next) {
-        const extractedToken = getToken(req.headers);
-        if (extractedToken) {
-            admin.auth().verifyIdToken(extractedToken).then((claims) => {
-                this.logger.log(claims);
-                if (claims.admin === true) {
-                    next();
-                } else {
-                    this.logger.log('check if registration closed with claim');
-                    return checkIfRegistrationIsClosed()
-                }
-            });
-        } else {
-            this.logger.log('check if registration closed withoutclaim');
+        this.logger.log('check is registrationclosed');
 
-            return checkIfRegistrationIsClosed();
-        }
-
-        function checkIfRegistrationIsClosed() {
-            // return getRepository(Competition).findOne({isActive: true}).then(competition => {
-            //     competition.deadline > new Date()
-            //         ? next(new HttpException('No-Content', HttpStatus.NO_CONTENT))
-            //         :
-            next();
-            // });
-        }
-
-    };
-
-}
-
-@Injectable()
-export class CanSavePrediction implements NestMiddleware {
-    private readonly logger = new Logger('CanSavePrediction', true);
-
-    use(req, res, next) {
-        return checkIfRegistrationIsClosed();
-
-        function checkIfRegistrationIsClosed() {
-            // return getRepository(Competition).findOne({isActive: true}).then(competition => {
-            //     competition.deadline < new Date()
-            //         ? next(new HttpException('', HttpStatus.FORBIDDEN))
-            //         : next();
-            // });
-        }
+        return getRepository(Hetekspel).findOne().then(hetekspel => {
+            this.logger.log(hetekspel.deadline);
+            this.logger.log(new Date());
+            hetekspel.deadline < new Date()
+                ? next(new HttpException('Deadline voor voorspellingen is verstreken', HttpStatus.FORBIDDEN))
+                : next();
+        });
     }
 }
+
 
 const getToken = headers => {
     if (headers && headers.authorization) {

@@ -2,7 +2,7 @@ import {MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
 import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
-import {AddFireBaseUserToRequest} from './authentication.middleware';
+import {AddFireBaseUserToRequest, AdminMiddleware, IsRegistrationClosed} from './authentication.middleware';
 import {MatchModule} from './match/match.module';
 import {MatchPredictionModule} from './match-prediction/match-prediction.module';
 import {Match} from './match/match.entity';
@@ -70,13 +70,30 @@ export class AppModule {
 
     configure(consumer: MiddlewareConsumer): void {
 
+        consumer.apply(IsRegistrationClosed).forRoutes(
+            {path: 'match-prediction', method: RequestMethod.POST},
+            {path: 'knockout-prediction', method: RequestMethod.POST},
+            {path: 'poule-prediction', method: RequestMethod.POST},
+        )
+
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
-            {path: '/**', method: RequestMethod.POST},
-            {path: '/**', method: RequestMethod.PUT},
+            {path: 'participant', method: RequestMethod.POST},
+            {path: 'poule-prediction', method: RequestMethod.POST},
             {path: '/participant/mine', method: RequestMethod.GET},
             {path: '/match-prediction', method: RequestMethod.GET},
             {path: '/knockout/mine', method: RequestMethod.GET},
             {path: '/knockout-prediction', method: RequestMethod.POST},
             {path: '/poule-prediction', method: RequestMethod.GET});
-    }
+
+        consumer.apply(AdminMiddleware).forRoutes(
+            {path: '/match', method: RequestMethod.POST},
+            {path: '/match', method: RequestMethod.PUT},
+            {path: '/knockout', method: RequestMethod.POST},
+            {path: '/knockout', method: RequestMethod.PUT},
+            {path: '/team', method: RequestMethod.PUT},
+            {path: '/notification', method: RequestMethod.POST},
+            {path: '/headline', method: RequestMethod.POST},
+            {path: '/stand', method: RequestMethod.POST},
+            {path: '/stats/**', method: RequestMethod.POST},
+        )}
 }

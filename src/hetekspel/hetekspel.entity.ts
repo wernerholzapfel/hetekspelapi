@@ -13,6 +13,9 @@ export class Hetekspel {
     previousTable: number;
 
     @UpdateDateColumn({type: 'timestamptz'})
+    deadline: Date;
+
+    @UpdateDateColumn({type: 'timestamptz'})
     updatedDate: Date;
 
     @CreateDateColumn({type: 'timestamptz'})
