@@ -127,7 +127,9 @@ export class StandService {
                 .orderBy('match.ordering', "DESC")
                 .getOne()
         }
-
+        if (!maxMatchId) {
+            maxMatchId = {ordering: 0}
+        }
 
         const participants: any = await this.connection
             .getRepository(Participant)
@@ -211,7 +213,19 @@ export class StandService {
                 }
             })
             .sort((a, b) => {
-                return b.totalPoints - a.totalPoints;
+                if (b.totalPoints > a.totalPoints) {
+                    return -1
+                }
+                if (b.totalPoints < a.totalPoints) {
+                    return 1
+                }
+                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                    return -1;
+                }
+                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                    return 1;
+                }
+                return 0;
             });
     }
 

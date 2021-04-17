@@ -30,7 +30,7 @@ export class Match {
     @Column({nullable: true})
     awayScore: number;
 
-    @Column({nullable: true, type: 'timestamp'})
+    @Column({nullable: true, type: 'timestamptz'})
     date: Date;
 
     @OneToMany(type => MatchPrediction, matchPrediction => matchPrediction.match)

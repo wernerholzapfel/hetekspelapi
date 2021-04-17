@@ -40,7 +40,7 @@ export class Knockout {
     @Column({nullable: true})
     awayScore: number;
 
-    @Column({nullable: true, type: 'timestamp'})
+    @Column({nullable: true, type: 'timestamptz'})
     date: Date;
 
     @OneToMany(type => KnockoutPrediction, knockoutPrediction => knockoutPrediction.knockout)
