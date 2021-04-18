@@ -6,6 +6,7 @@ import {CreateKnockoutDto, UpdateKnockoutDto} from "./create-knockout.dto";
 import {Participant} from "../participant/participant.entity";
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import {Team} from "../team/team.entity";
+import {Pushtoken} from "../pushtoken/pushtoken.entity";
 
 @Injectable()
 export class KnockoutService {
@@ -120,6 +121,20 @@ export class KnockoutService {
                 await transactionalEntityManager
                     .getRepository(KnockoutPrediction)
                     .save(updatedKnockoutPredictions)
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+
+                await transactionalEntityManager
+                    .getRepository(Team)
+                    .createQueryBuilder()
+                    .update(Team)
+                    .set({isEliminated: true, eliminationRound: knockout.round})
+                    .where("id = :teamId", {teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id})
+                    .execute()
                     .catch((err) => {
                         throw new HttpException({
                             message: err.message,

@@ -194,11 +194,7 @@ export class StandService {
                         return a + b.spelpunten;
                     }, 0),
                     knockoutPoints: participant.knockoutPredictions.reduce((a, b) => {
-                        if (b.knockout.ordering <= matchId) {
-                            return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
-                        } else {
-                            return a;
-                        }
+                        return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
                     }, 0),
                 };
             }).map(participant => {
@@ -214,10 +210,10 @@ export class StandService {
             })
             .sort((a, b) => {
                 if (b.totalPoints > a.totalPoints) {
-                    return -1
+                    return 1
                 }
                 if (b.totalPoints < a.totalPoints) {
-                    return 1
+                    return -1
                 }
                 if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
                     return -1;

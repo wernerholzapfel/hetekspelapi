@@ -9,6 +9,8 @@ export class CreateTeamDto {
 
 export class UpdateTeamPositionDto {
     @IsDefined() readonly id: string;
+    @IsDefined() readonly isEliminated: boolean;
+    @IsDefined() readonly eliminationRound: string;
     @IsDefined() @IsInt() @Min(1) @Max(4)
     readonly poulePosition: number;
 }

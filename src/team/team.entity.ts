@@ -18,6 +18,12 @@ export class Team {
     @Column('int', {nullable: true})
     poulePosition: number
 
+    @Column('boolean', {default: false})
+    isEliminated: boolean
+
+    @Column('text', {nullable: true})
+    eliminationRound: string
+
     @OneToMany(type => Match, match => match.homeTeam)
     matches: Match[];
 

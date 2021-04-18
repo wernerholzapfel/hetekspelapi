@@ -88,6 +88,7 @@ export class KnockoutPredictionService {
                     logoUrl: team.logoUrl,
                     name: team.name,
                     isInRound: team.knockoutsHome.length > 0 || team.knockoutsAway.length > 0,
+                    isEliminated: team.isEliminated,
                     points: team.knockoutsHome.length > 0 || team.knockoutsAway.length > 0 ? this.getPointsForKnockout(roundId) : 0
                 },
                 participants: kos.map(ko => {
