@@ -84,6 +84,15 @@ export class AppModule {
             {path: '/match-prediction', method: RequestMethod.GET},
             {path: '/knockout/mine', method: RequestMethod.GET},
             {path: '/knockout-prediction', method: RequestMethod.POST},
+            {path: '/match', method: RequestMethod.POST},
+            {path: '/match', method: RequestMethod.PUT},
+            {path: '/knockout', method: RequestMethod.POST},
+            {path: '/knockout', method: RequestMethod.PUT},
+            {path: '/team', method: RequestMethod.PUT},
+            {path: '/notification', method: RequestMethod.POST},
+            {path: '/headline', method: RequestMethod.POST},
+            {path: '/stand', method: RequestMethod.POST},
+            {path: '/stats/**', method: RequestMethod.POST},
             {path: '/poule-prediction', method: RequestMethod.GET});
 
         consumer.apply(AdminMiddleware).forRoutes(

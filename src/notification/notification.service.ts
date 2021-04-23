@@ -26,7 +26,7 @@ export class NotificationService {
                     notification: {
                         title: 'Het EK Spel',
                         body: `Hoi ${token.participant.displayName} de stand is bijgewerkt ${new Date}`,
-                        badge: '1'
+                        badge: '0'
                     }
                 }, {})
                     .then(async response => {
