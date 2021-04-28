@@ -18,7 +18,7 @@ export class Team {
     @Column('int', {nullable: true})
     poulePosition: number
 
-    @Column('boolean', {default: false})
+    @Column('boolean', {default: null, nullable: true})
     isEliminated: boolean
 
     @Column('text', {nullable: true})

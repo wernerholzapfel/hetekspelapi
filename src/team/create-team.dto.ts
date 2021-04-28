@@ -1,4 +1,4 @@
-import {IsDefined, IsInt, IsString, Max, Min} from 'class-validator';
+import {IsDefined, IsIn, IsInt, IsString, Max, Min} from 'class-validator';
 
 export class CreateTeamDto {
     readonly id: string;
@@ -9,7 +9,7 @@ export class CreateTeamDto {
 
 export class UpdateTeamPositionDto {
     @IsDefined() readonly id: string;
-    @IsDefined() readonly isEliminated: boolean;
+    @IsIn([true, false, null]) readonly isEliminated: boolean;
     @IsDefined() readonly eliminationRound: string;
     @IsDefined() @IsInt() @Min(1) @Max(4)
     readonly poulePosition: number;

@@ -36,7 +36,7 @@ export class TeamService {
                 });
 
             const teamIds = teams.reduce((acc, value, index) => {
-                return [...acc, value.id]
+                return value.isEliminated === null ? [...acc] : [...acc, value.id]
             }, []);
 
             if (teams) {
