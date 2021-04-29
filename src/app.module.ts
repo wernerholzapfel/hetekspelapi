@@ -1,4 +1,4 @@
-import {MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
+import {CacheInterceptor, CacheModule, MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
 import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
@@ -18,14 +18,16 @@ import {KnockoutModule} from "./knockout/knockout.module";
 import {KnockoutPrediction} from "./knockout-prediction/knockout-prediction.entity";
 import {KnockoutPredictionModule} from "./knockout-prediction/knockout-prediction.module";
 import {StandModule} from "./stand/stand.module";
-import { NotificationModule } from './notification/notification.module';
-import { PushtokenModule } from './pushtoken/pushtoken.module';
+import {NotificationModule} from './notification/notification.module';
+import {PushtokenModule} from './pushtoken/pushtoken.module';
 import {Pushtoken} from "./pushtoken/pushtoken.entity";
 import {Hetekspel} from "./hetekspel/hetekspel.entity";
-import { HetekspelModule } from './hetekspel/hetekspel.module';
-import { HeadlineModule } from './headline/headline.module';
+import {HetekspelModule} from './hetekspel/hetekspel.module';
+import {HeadlineModule} from './headline/headline.module';
 import {Headline} from "./headline/headline.entity";
-import { StatsModule } from './stats/stats.module';
+import {StatsModule} from './stats/stats.module';
+import {APP_INTERCEPTOR} from "@nestjs/core";
+import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
 
 @Module({
     imports: [
@@ -50,6 +52,10 @@ import { StatsModule } from './stats/stats.module';
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
         }), ParticipantsModule,
+        CacheModule.register({
+            ttl: null, // seconds
+            // maximum number of items in cache
+        }),
         TeamModule,
         MatchModule,
         MatchPredictionModule,
@@ -64,7 +70,15 @@ import { StatsModule } from './stats/stats.module';
         StatsModule
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService,
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: CacheInterceptor,
+        }, {
+            provide: APP_INTERCEPTOR,
+            useClass: InvalidateCacheInterceptor,
+        }
+    ]
 })
 export class AppModule {
 
@@ -105,5 +119,6 @@ export class AppModule {
             {path: '/headline', method: RequestMethod.POST},
             {path: '/stand', method: RequestMethod.POST},
             {path: '/stats/**', method: RequestMethod.POST},
-        )}
+        )
+    }
 }

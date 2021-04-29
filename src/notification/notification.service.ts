@@ -21,7 +21,6 @@ export class NotificationService {
 
         const messagingDevicesResponse: any[] = []
         await pushtokens.forEach(async token => {
-            console.log(token);
                 await admin.messaging().sendToDevice(token.pushToken, {
                     notification: {
                         title: 'Het EK Spel',

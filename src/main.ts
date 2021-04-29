@@ -2,7 +2,8 @@ import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import logger from './common/logger';
 import * as admin from 'firebase-admin';
-import {ValidationPipe} from "@nestjs/common";
+import {CacheModule, ValidationPipe} from "@nestjs/common";
+import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
 
 
 admin.initializeApp({
@@ -27,6 +28,7 @@ admin.initializeApp({
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     app.enableCors();
+
     app.useGlobalPipes(
         /**
          * Reference: https://docs.nestjs.com/techniques/validation#auto-validation
