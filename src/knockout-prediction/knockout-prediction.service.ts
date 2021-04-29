@@ -90,7 +90,7 @@ export class KnockoutPredictionService {
                     name: team.name,
                     isInRound: parseInt(team.eliminationRound) <= parseInt(roundId),
                     isEliminated: team.isEliminated,
-                    points: parseInt(team.eliminationRound) <= parseInt(roundId) ? this.getPointsForKnockout(roundId) : 0
+                    points: parseInt(team.eliminationRound) <= parseInt(roundId) || !team.isEliminated ? this.getPointsForKnockout(roundId) : 0
                 },
                 participants: kos.map(ko => {
                     return {
