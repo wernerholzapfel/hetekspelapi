@@ -5,6 +5,9 @@ import * as admin from 'firebase-admin';
 import {Hetekspel} from "../hetekspel/hetekspel.entity";
 import {Match} from "../match/match.entity";
 import {Knockout} from "../knockout/knockout.entity";
+import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
+import {UpdateKnockoutDto} from "../knockout/create-knockout.dto";
+import {Team} from "../team/team.entity";
 
 @Injectable()
 export class StandService {
@@ -225,4 +228,36 @@ export class StandService {
             });
     }
 
+    determineKoPoints(knockoutPrediction: KnockoutPrediction, knockoutTeams: Team[] | {id: string}[], round: string, homeTeam: boolean): number {
+        if (knockoutPrediction.knockout.round === round) {
+            const teamOk = !!knockoutTeams.find(kt => kt.id === (homeTeam ? knockoutPrediction.homeTeam.id : knockoutPrediction.awayTeam.id));
+
+            switch (round) {
+                case '16':
+                    return teamOk ? 10 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                case '8':
+                    return teamOk ? 25 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                case '4':
+                    return teamOk ? 45 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                case '2':
+                    return teamOk ? 80 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                default:
+                    return null
+            }
+        } else {
+            return null
+        }
+
+    }
+
+    determineWinnerPoints(knockoutPrediction: KnockoutPrediction, knockout: UpdateKnockoutDto, round: string): number {
+        if (knockoutPrediction.knockout.round === round && round === '2') {
+            const winnerOk =
+                (knockoutPrediction.homeTeam.id === knockoutPrediction.selectedTeam.id || knockoutPrediction.awayTeam.id === knockoutPrediction.selectedTeam.id) &&
+                knockoutPrediction.selectedTeam.id === knockout.winnerTeam.id
+            return winnerOk ? 150 : 0
+        } else {
+            return null
+        }
+    }
 }

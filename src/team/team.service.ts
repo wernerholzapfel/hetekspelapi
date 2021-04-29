@@ -5,6 +5,8 @@ import {Team} from './team.entity';
 import {CreateTeamDto, UpdateTeamPositionDto} from './create-team.dto';
 import {MatchPrediction} from "../match-prediction/match-prediction.entity";
 import {PoulePrediction} from "../poule-prediction/poule-prediction.entity";
+import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
+import {StandService} from "../stand/stand.service";
 
 @Injectable()
 export class TeamService {
@@ -12,7 +14,8 @@ export class TeamService {
 
     constructor(private readonly connection: Connection,
                 @InjectRepository(Team)
-                private readonly repository: Repository<Team>,) {
+                private readonly repository: Repository<Team>,
+                private standService: StandService) {
     }
 
     async getAll(): Promise<Team[]> {
@@ -27,7 +30,7 @@ export class TeamService {
         return await getManager().transaction(async transactionalEntityManager => {
 
             const teams = await transactionalEntityManager.getRepository(Team)
-                .save(teamPositionDto)
+                .save(teamPositionDto.filter(t => t.isEliminated != null))
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -60,6 +63,38 @@ export class TeamService {
                 await transactionalEntityManager
                     .getRepository(PoulePrediction)
                     .save(updatedPoulePredictions)
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+
+                const knockoutPredictions: KnockoutPrediction[] = await transactionalEntityManager
+                    .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+                    .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
+                    .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
+                    .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
+                    .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
+                    .leftJoinAndSelect('knockoutPrediction.knockout', 'knockout')
+                    .where('knockout.round = :round', {round: '16'})
+                    .getMany();
+
+
+                const updatedKnockoutPredictions: any[] = [...knockoutPredictions.map(prediction => {
+                    return {
+                        ...prediction,
+                        // homeInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, true),
+                        // awayInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, false),
+                        homeSpelpunten: this.standService.determineKoPoints(prediction, teams.filter(t => t.isEliminated === false), '16', true),
+                        awaySpelpunten: this.standService.determineKoPoints(prediction, teams.filter(t => t.isEliminated === false), '16', false),
+                    }
+                })];
+
+
+                await transactionalEntityManager
+                    .getRepository(KnockoutPrediction)
+                    .save(updatedKnockoutPredictions)
                     .catch((err) => {
                         throw new HttpException({
                             message: err.message,

@@ -7,12 +7,14 @@ import {Participant} from "../participant/participant.entity";
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import {Team} from "../team/team.entity";
 import {Pushtoken} from "../pushtoken/pushtoken.entity";
+import {StandService} from "../stand/stand.service";
 
 @Injectable()
 export class KnockoutService {
     constructor(private readonly connection: Connection,
                 @InjectRepository(Knockout)
-                private readonly repository: Repository<Knockout>) {
+                private readonly repository: Repository<Knockout>,
+                private standService: StandService) {
     }
 
     async findKnockouts(firebaseIdentifier: string): Promise<any[]> { // todo model aanmaken
@@ -94,6 +96,7 @@ export class KnockoutService {
                 .where('knockout.id = :id', {id: item.id})
                 .getOne();
 
+            const round = knockout.round != '2' ? (parseInt(knockout.round) / 2).toString() : knockout.round
             if (item.id && knockout.round && item.winnerTeam.id) {
 
                 const knockoutPredictions: KnockoutPrediction[] = await transactionalEntityManager
@@ -103,17 +106,15 @@ export class KnockoutService {
                     .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
                     .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
                     .leftJoinAndSelect('knockoutPrediction.knockout', 'knockout')
-                    .where('knockout.round = :round', {round: knockout.round})
+                    .where('knockout.round = :round', {round: round})
                     .getMany();
 
                 const updatedKnockoutPredictions: any[] = [...knockoutPredictions.map(prediction => {
                     return {
                         ...prediction,
-                        // homeInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, true),
-                        // awayInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, false),
-                        homeSpelpunten: this.determineKoPoints(prediction, item, knockout.round, true),
-                        awaySpelpunten: this.determineKoPoints(prediction, item, knockout.round, false),
-                        winnerSpelpunten: this.determineWinnerPoints(prediction, item, knockout.round),
+                        homeSpelpunten: this.standService.determineKoPoints(prediction, [item.winnerTeam], round, true),
+                        awaySpelpunten: this.standService.determineKoPoints(prediction, [item.winnerTeam], round, false),
+                        winnerSpelpunten: this.standService.determineWinnerPoints(prediction, item, knockout.round),
                     }
                 })];
 
@@ -153,40 +154,5 @@ export class KnockoutService {
         return !!k.find(k => k.knockout.round === round && (k.awayTeam.id === teamId || k.homeTeam.id === teamId)) ? true : homeTeam ? prediction.homeInRound : prediction.awayInRound;
     }
 
-    determineKoPoints(knockoutPrediction: KnockoutPrediction, knockout: UpdateKnockoutDto, round: string, homeTeam: boolean): number {
-        if (knockoutPrediction.knockout.round === round) {
-            const teamOk = homeTeam ?
-                knockoutPrediction.homeTeam.id === knockout.homeTeam.id
-                || knockoutPrediction.homeTeam.id === knockout.awayTeam.id :
-                knockoutPrediction.awayTeam.id === knockout.homeTeam.id
-                || knockoutPrediction.awayTeam.id === knockout.awayTeam.id
 
-            switch (round) {
-                case '16':
-                    return teamOk ? 10 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
-                case '8':
-                    return teamOk ? 25 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
-                case '4':
-                    return teamOk ? 45 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
-                case '2':
-                    return teamOk ? 80 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
-                default:
-                    return null
-            }
-        } else {
-            return null
-        }
-
-    }
-
-    determineWinnerPoints(knockoutPrediction: KnockoutPrediction, knockout: UpdateKnockoutDto, round: string): number {
-        if (knockoutPrediction.knockout.round === round && round === '2') {
-            const winnerOk =
-                (knockoutPrediction.homeTeam.id === knockoutPrediction.selectedTeam.id || knockoutPrediction.awayTeam.id === knockoutPrediction.selectedTeam.id) &&
-                knockoutPrediction.selectedTeam.id === knockout.winnerTeam.id
-            return winnerOk ? 150 : 0
-        } else {
-            return null
-        }
-    }
 }
