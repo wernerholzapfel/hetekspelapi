@@ -234,13 +234,13 @@ export class StandService {
 
             switch (round) {
                 case '16':
-                    return teamOk ? 10 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                    return teamOk ? 20 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
                 case '8':
-                    return teamOk ? 25 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                    return teamOk ? 35 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
                 case '4':
-                    return teamOk ? 45 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                    return teamOk ? 60 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
                 case '2':
-                    return teamOk ? 80 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
+                    return teamOk ? 100 : homeTeam ? knockoutPrediction.homeSpelpunten : knockoutPrediction.awaySpelpunten
                 default:
                     return null
             }
@@ -255,7 +255,7 @@ export class StandService {
             const winnerOk =
                 (knockoutPrediction.homeTeam.id === knockoutPrediction.selectedTeam.id || knockoutPrediction.awayTeam.id === knockoutPrediction.selectedTeam.id) &&
                 knockoutPrediction.selectedTeam.id === knockout.winnerTeam.id
-            return winnerOk ? 150 : 0
+            return winnerOk ? 175 : 0
         } else {
             return null
         }

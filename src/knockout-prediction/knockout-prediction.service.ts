@@ -129,15 +129,15 @@ export class KnockoutPredictionService {
     private getPointsForKnockout(round): number {
         switch (round) {
             case '16':
-                return 10
+                return 20
             case '8':
-                return 25
+                return 35
             case '4':
-                return 45
+                return 60
             case '2':
-                return 80
+                return 100
             case '1':
-                return 150
+                return 175
             default:
                 return null
         }
