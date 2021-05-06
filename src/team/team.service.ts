@@ -26,11 +26,11 @@ export class TeamService {
             .getMany();
     }
 
-    async update(teamPositionDto: UpdateTeamPositionDto[]): Promise<(UpdateTeamPositionDto & Team)[] | void> {
+    async update(teamPositionDto: UpdateTeamPositionDto): Promise<(UpdateTeamPositionDto & Team)> {
         return await getManager().transaction(async transactionalEntityManager => {
 
-            const teams = await transactionalEntityManager.getRepository(Team)
-                .save(teamPositionDto.filter(t => t.isEliminated != null))
+            const team = await transactionalEntityManager.getRepository(Team)
+                .save(teamPositionDto)
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -38,27 +38,20 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-            const teamIds = teams.reduce((acc, value, index) => {
-                return value.isEliminated === null ? [...acc] : [...acc, value.id]
-            }, []);
 
-            if (teams) {
+            if (team.isPositionFinal) {
                 const poulePredictions: PoulePrediction[] = await transactionalEntityManager
                     .getRepository(PoulePrediction).createQueryBuilder('poulePrediction')
                     .leftJoinAndSelect('poulePrediction.team', 'team')
-                    .where('team.id IN (:...teamIds)',
-                        {
-                            teamIds
-                        })
+                    .where('team.id = :teamId', {teamId: team.id})
                     .getMany();
 
                 const updatedPoulePredictions: any[] = [...poulePredictions.map(prediction => {
                     return {
                         ...prediction,
-                        spelpunten: prediction.positie === teamPositionDto.find(tp => tp.id === prediction.team.id).poulePosition ? 5 : 0,
+                        spelpunten: prediction.positie === teamPositionDto.poulePosition ? 5 : 0,
                     }
                 })];
-
 
                 await transactionalEntityManager
                     .getRepository(PoulePrediction)
@@ -69,43 +62,39 @@ export class TeamService {
                             statusCode: HttpStatus.BAD_REQUEST,
                         }, HttpStatus.BAD_REQUEST);
                     });
-
-                const knockoutPredictions: KnockoutPrediction[] = await transactionalEntityManager
-                    .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
-                    .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
-                    .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
-                    .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
-                    .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
-                    .leftJoinAndSelect('knockoutPrediction.knockout', 'knockout')
-                    .where('knockout.round = :round', {round: '16'})
-                    .getMany();
-
-
-                const updatedKnockoutPredictions: any[] = [...knockoutPredictions.map(prediction => {
-                    return {
-                        ...prediction,
-                        // homeInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, true),
-                        // awayInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, false),
-                        homeSpelpunten: this.standService.determineKoPoints(prediction, teams.filter(t => t.isEliminated === false), '16', true),
-                        awaySpelpunten: this.standService.determineKoPoints(prediction, teams.filter(t => t.isEliminated === false), '16', false),
-                    }
-                })];
-
-
-                await transactionalEntityManager
-                    .getRepository(KnockoutPrediction)
-                    .save(updatedKnockoutPredictions)
-                    .catch((err) => {
-                        throw new HttpException({
-                            message: err.message,
-                            statusCode: HttpStatus.BAD_REQUEST,
-                        }, HttpStatus.BAD_REQUEST);
-                    });
-
-
             }
+            const knockoutPredictions: KnockoutPrediction[] = await transactionalEntityManager
+                .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+                .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
+                .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
+                .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
+                .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
+                .leftJoinAndSelect('knockoutPrediction.knockout', 'knockout')
+                .where('knockout.round = :round', {round: '16'})
+                .getMany();
 
-            return teams;
+            this.logger.log('werner kopred opgehaald');
+            const updatedKnockoutPredictions: any[] = [...knockoutPredictions.map(prediction => {
+                return {
+                    ...prediction,
+                    // homeInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, true),
+                    // awayInRound: this.determineInRound(knockoutPredictions.filter(ko => ko.participant.id === prediction.participant.id), prediction, item.homeTeam.id, knockout.round, false),
+                    homeSpelpunten: this.standService.determineKoPoints(prediction, [{...team}], '16', true),
+                    awaySpelpunten: this.standService.determineKoPoints(prediction, [{...team}], '16', false),
+                }
+            })];
+
+
+            await transactionalEntityManager
+                .getRepository(KnockoutPrediction)
+                .save(updatedKnockoutPredictions)
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+            return team;
         })
     }
 }

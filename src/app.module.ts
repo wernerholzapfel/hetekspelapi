@@ -49,8 +49,8 @@ import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
                 Hetekspel,
                 Headline,
             ],
-            logging: true,
-            synchronize: true, // DEV only, do not use on PROD!
+            logging: false,
+            synchronize: false, // DEV only, do not use on PROD!
         }), ParticipantsModule,
         CacheModule.register({
             ttl: null, // seconds

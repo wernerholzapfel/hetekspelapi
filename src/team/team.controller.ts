@@ -16,7 +16,7 @@ export class TeamController {
     }
 
     @Put()
-    async update(@Req() req, @Body() UpdateTeamPositionDto: UpdateTeamPositionDto[]) {
+    async update(@Req() req, @Body() UpdateTeamPositionDto: UpdateTeamPositionDto) {
         return await this.service.update(UpdateTeamPositionDto);
     }
 }
