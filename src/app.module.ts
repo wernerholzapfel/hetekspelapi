@@ -91,6 +91,8 @@ export class AppModule {
         )
 
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
+            {path: '/**', method: RequestMethod.POST},
+            {path: '/**', method: RequestMethod.PUT},
             {path: 'participant', method: RequestMethod.POST},
             {path: 'participant/pushtoken', method: RequestMethod.PUT},
             {path: 'poule-prediction', method: RequestMethod.POST},

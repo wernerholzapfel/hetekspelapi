@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Put, Req} from '@nestjs/common';
+import {Body, CacheTTL, Controller, Get, Logger, Post, Put, Req} from '@nestjs/common';
 
 import {AddPushTokenDto, CreateParticipantDto} from './create-participant.dto';
 import {ParticipantsService} from './participants.service';
@@ -18,6 +18,7 @@ export class ParticipantController {
     }
 
     @Get('mine')
+    @CacheTTL(1)
     async find(@Req() req): Promise<Participant> {
         return this.participantsService.find(req.user.uid);
     }
