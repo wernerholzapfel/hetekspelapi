@@ -72,19 +72,14 @@ async findMatches(): Promise<Match[]> {
         return matchPredictions;
     }
 
-    async createMatchPrediction(items: CreateMatchPredictionDto[], firebaseIdentifier): Promise<MatchPrediction[]> {
+    async createMatchPrediction(item: CreateMatchPredictionDto, firebaseIdentifier): Promise<MatchPrediction>{
 
         const participant = await this.connection.getRepository(Participant)
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
 
-        return await this.matchPrediction.save(items.map(p => {
-            return {
-                ...p,
-                participant
-            }
-        }))
+        return this.matchPrediction.save({...item, participant})
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,

@@ -19,7 +19,7 @@ export class MatchPredictionController {
         return this.service.findMatchesForParticipant(id);
     }
     @Post()
-    async create(@Req() req, @Body() createMatchPredictionDto: CreateMatchPredictionDto[]) {
+    async create(@Req() req, @Body() createMatchPredictionDto: CreateMatchPredictionDto) {
         return await this.service.createMatchPrediction(createMatchPredictionDto, req.user.uid)
     }
 }

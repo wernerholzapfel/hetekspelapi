@@ -36,7 +36,7 @@ async function bootstrap() {
         new ValidationPipe({
             // Make sure that there's no unexpected data
             whitelist: true,
-            forbidNonWhitelisted: true,
+            forbidNonWhitelisted: false,
             forbidUnknownValues: true,
 
             /**
