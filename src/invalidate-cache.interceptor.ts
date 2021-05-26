@@ -20,7 +20,8 @@ export class InvalidateCacheInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         this.logger.log(context.switchToHttp().getRequest().method)
         return next.handle().pipe(tap(async () => {
-            if (context.switchToHttp().getRequest().method === 'POST') {
+            if (context.switchToHttp().getRequest().method === 'POST' ||
+                context.switchToHttp().getRequest().method === 'PUT') {
                 this.logger.log('invalidate cache')
                 await this.cacheManager.reset();
             }

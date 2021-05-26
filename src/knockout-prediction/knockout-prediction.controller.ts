@@ -28,4 +28,8 @@ export class KnockoutPredictionController {
     async create(@Req() req, @Body() createKnockoutPredictionDtos: CreateKnockoutPredictionDto[]) {
         return await this.service.createKnockoutPrediction(createKnockoutPredictionDtos, req.user.uid)
     }
+    @Post('one')
+    async createOne(@Req() req, @Body() createKnockoutPredictionDto: CreateKnockoutPredictionDto) {
+        return await this.service.createKnockoutPredictionOne(createKnockoutPredictionDto, req.user.uid)
+    }
 }

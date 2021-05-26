@@ -1,10 +1,10 @@
-import {IsDefined} from 'class-validator';
+import {IsDefined, IsOptional} from 'class-validator';
 import {Team} from "../team/team.entity";
 import {Knockout} from "../knockout/knockout.entity";
 
 export class CreateKnockoutPredictionDto {
-    readonly id: string;
-
-    @IsDefined() selected: Team;
+    @IsOptional() readonly id: string;
+    @IsDefined() matchId: string;
+    @IsDefined() selectedTeam: Team;
     @IsDefined() knockout: Knockout;
 }

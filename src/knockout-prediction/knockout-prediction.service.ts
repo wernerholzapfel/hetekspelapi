@@ -122,6 +122,28 @@ export class KnockoutPredictionService {
             });
     }
 
+    async createKnockoutPredictionOne(item: CreateKnockoutPredictionDto, firebaseIdentifier): Promise<any> {
+
+        const participant = await this.connection.getRepository(Participant)
+            .createQueryBuilder('participant')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .getOne();
+
+        const updatedMatch = await this.knockoutPredictionRepository.save(
+            {
+                ...item,
+                participant
+            })
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return {...updatedMatch, matchId: item.matchId}
+    }
+
     transformMatchToPrediction(i): any {
         return {homeScore: null, awayScore: null, match: i};
     }
