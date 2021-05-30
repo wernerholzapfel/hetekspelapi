@@ -123,7 +123,6 @@ export class KnockoutPredictionService {
     }
 
     async createKnockoutPredictionOne(item: CreateKnockoutPredictionDto, firebaseIdentifier): Promise<any> {
-
         const participant = await this.connection.getRepository(Participant)
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})

@@ -4,6 +4,7 @@ import {Match} from "../match/match.entity";
 import {Team} from "../team/team.entity";
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import * as admin from "firebase-admin";
+import {Participant} from "../participant/participant.entity";
 
 @Injectable()
 export class StatsService {
@@ -51,6 +52,21 @@ export class StatsService {
         docRef.set(matches);
 
         return matches;
+    }
+
+    async getFormInformation(): Promise<any> {
+        return this.connection.getRepository(Participant)
+            .createQueryBuilder('participant')
+            .leftJoin('participant.matchPredictions', 'matchPredictions')
+            .leftJoin('participant.poulePredictions', 'poulePredictions')
+            .leftJoin('participant.knockoutPredictions', 'knockoutPredictions')
+            .select('participant.displayName')
+            .addSelect('COUNT(DISTINCT(matchPredictions.id)) as matchPredictions')
+            .addSelect('COUNT(DISTINCT(poulePredictions.id)) as poulePredictions')
+            .addSelect('COUNT(DISTINCT(knockoutPredictions.id)) as knockoutPredictions')
+            .groupBy('participant.id')
+            .orderBy('knockoutPredictions', "DESC")
+            .getRawMany()
     }
 
     async createKnockoutStats(): Promise<any> {

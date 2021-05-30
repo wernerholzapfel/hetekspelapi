@@ -19,4 +19,9 @@ export class StatsController {
         return this.service.createKnockoutStats();
     }
 
+    @Get('complete')
+    async getFormInformation(): Promise<any[]> {
+        return this.service.getFormInformation();
+    }
+
 }

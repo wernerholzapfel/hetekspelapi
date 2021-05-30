@@ -6,5 +6,7 @@ export class CreateKnockoutPredictionDto {
     @IsOptional() readonly id: string;
     @IsDefined() matchId: string;
     @IsDefined() selectedTeam: Team;
+    @IsDefined() awayTeam: Team;
+    @IsDefined() homeTeam: Team;
     @IsDefined() knockout: Knockout;
 }
