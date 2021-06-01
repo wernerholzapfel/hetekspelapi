@@ -43,4 +43,10 @@ export class Participant {
 
     @CreateDateColumn({type: 'timestamptz'})
     createdDate: Date;
+
+    @Column({default: true})
+    isAllowed: boolean;
+
+    @Column({default: false, select: false})
+    hasPaid: boolean;
 }
