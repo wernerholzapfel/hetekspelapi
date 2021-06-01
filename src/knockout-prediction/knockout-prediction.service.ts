@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Brackets, Connection, Repository} from 'typeorm';
+import {Brackets, Connection, DeleteResult, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Participant} from '../participant/participant.entity';
 import {Match} from '../match/match.entity';
@@ -30,7 +30,6 @@ export class KnockoutPredictionService {
             .where('participant.id = :participantId', {participantId})
             .orderBy('knockout.ordering', "ASC")
             .getMany();
-
     }
 
     async findKnockoutForTeamInRound(roundId, teamId: string): Promise<any> {
@@ -141,6 +140,20 @@ export class KnockoutPredictionService {
             });
 
         return {...updatedMatch, matchId: item.matchId}
+    }
+
+    async deleteKnockoutPredictions(firebaseIdentifier) : Promise<DeleteResult> {
+        const participant = await this.connection.getRepository(Participant)
+            .createQueryBuilder('participant')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .getOne();
+
+        return await this.connection
+            .createQueryBuilder()
+            .delete()
+            .from(KnockoutPrediction)
+            .where("participant.id = :id", { id: participant.id })
+            .execute();
     }
 
     transformMatchToPrediction(i): any {

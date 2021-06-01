@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, Post, Req} from '@nestjs/common';
 import {KnockoutPredictionService} from "./knockout-prediction.service";
 import {KnockoutPrediction} from "./knockout-prediction.entity";
 import {CreateKnockoutPredictionDto} from "./create-knockout-prediction.dto";
@@ -31,5 +31,10 @@ export class KnockoutPredictionController {
     @Post('one')
     async createOne(@Req() req, @Body() createKnockoutPredictionDto: CreateKnockoutPredictionDto) {
         return await this.service.createKnockoutPredictionOne(createKnockoutPredictionDto, req.user.uid)
+    }
+
+    @Delete()
+    async deleteKnokcoutPredictions(@Req() req) {
+        return await this.service.deleteKnockoutPredictions(req.user.uid)
     }
 }
