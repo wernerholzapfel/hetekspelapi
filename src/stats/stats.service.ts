@@ -64,6 +64,7 @@ export class StatsService {
             .addSelect('COUNT(DISTINCT(matchPredictions.id)) as matchPredictions')
             .addSelect('COUNT(DISTINCT(poulePredictions.id)) as poulePredictions')
             .addSelect('COUNT(DISTINCT(knockoutPredictions.id)) as knockoutPredictions')
+            .where('participant.isAllowed')
             .groupBy('participant.id')
             .orderBy('participant.createdDate', "ASC")
             .getRawMany()
