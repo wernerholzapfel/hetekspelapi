@@ -144,10 +144,10 @@ export class StandService {
             .addSelect('knockoutPredictions.winnerSpelpunten')
             .addSelect('knockout.ordering')
             .addSelect('match.ordering')
-            .leftJoin('participant.matchPredictions', 'matchPredictions')
+            .leftJoin('participant.matchPredictions', 'matchPredictions', 'matchPredictions.spelpunten > 0')
             .leftJoin('matchPredictions.match', 'match', )
-            .leftJoin('participant.poulePredictions', 'poulePredictions')
-            .leftJoin('participant.knockoutPredictions', 'knockoutPredictions')
+            .leftJoin('participant.poulePredictions', 'poulePredictions', 'poulePredictions.spelpunten > 0')
+            .leftJoin('participant.knockoutPredictions', 'knockoutPredictions', 'knockoutPredictions.homeSpelpunten > 0 or knockoutPredictions.awaySpelpunten > 0 or knockoutPredictions.winnerSpelpunten > 0')
             .leftJoin('knockoutPredictions.knockout', 'knockout')
             .where('participant.isAllowed')
             .getMany();
