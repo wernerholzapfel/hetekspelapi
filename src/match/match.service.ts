@@ -31,7 +31,7 @@ export class MatchService {
             .leftJoinAndSelect('matchPredictions.participant', 'participants')
             .where('match.homeScore is not null')
             .orderBy('match.ordering', "DESC")
-            .limit(3)
+            .take(3)
             .getMany();
 
         return matches.map(match => {
