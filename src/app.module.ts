@@ -53,7 +53,7 @@ import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
             synchronize: false, // DEV only, do not use on PROD!
         }), ParticipantsModule,
         CacheModule.register({
-            ttl: 1, // seconds
+            ttl: null, // seconds
             // maximum number of items in cache
         }),
         TeamModule,
