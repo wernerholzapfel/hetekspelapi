@@ -145,10 +145,11 @@ export class StandService {
             .addSelect('knockout.ordering')
             .addSelect('match.ordering')
             .leftJoin('participant.matchPredictions', 'matchPredictions')
-            .leftJoin('matchPredictions.match', 'match')
+            .leftJoin('matchPredictions.match', 'match', )
             .leftJoin('participant.poulePredictions', 'poulePredictions')
             .leftJoin('participant.knockoutPredictions', 'knockoutPredictions')
             .leftJoin('knockoutPredictions.knockout', 'knockout')
+            .where('participant.isAllowed')
             .getMany();
 
         const previousTableRef = db.ref(hetEkspel.currentTable.toString());

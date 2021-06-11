@@ -119,6 +119,7 @@ export class AppModule {
             {path: '/knockout', method: RequestMethod.PUT},
             {path: '/team', method: RequestMethod.PUT},
             {path: '/notification', method: RequestMethod.POST},
+            {path: '/notification/**', method: RequestMethod.POST},
             {path: '/headline', method: RequestMethod.POST},
             {path: '/stand', method: RequestMethod.POST},
             {path: '/stats/**', method: RequestMethod.POST},

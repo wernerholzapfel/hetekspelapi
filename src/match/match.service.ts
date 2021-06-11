@@ -21,6 +21,41 @@ export class MatchService {
             .getMany();
     }
 
+
+    async getFullScore(): Promise<any[]> {
+        const matches = await this.connection.getRepository(Match)
+            .createQueryBuilder('match')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .leftJoinAndSelect('match.matchPredictions', 'matchPredictions', 'match.homeScore = matchPredictions.homeScore and match.awayScore = matchPredictions.awayScore')
+            .leftJoinAndSelect('matchPredictions.participant', 'participants')
+            .where('match.homeScore is not null')
+            .orderBy('match.ordering', "DESC")
+            .limit(3)
+            .getMany();
+
+        return matches.map(match => {
+            return {
+                id: match.id,
+                homeTeam: match.homeTeam,
+                awayTeam: match.awayTeam,
+                ordering: match.ordering,
+                poule: match.poule,
+                city: match.city,
+                homeScore: match.homeScore,
+                awayScore: match.awayScore,
+                date: match.date,
+                updatedDate: match.updatedDate,
+                createdDate: match.createdDate,
+                participants: match.matchPredictions.map(mp => {
+                    return {
+                        displayName: mp.participant.displayName
+                    }
+                })
+            }
+        })
+    }
+
     async findMatch(matchId): Promise<Match> {
         return await this.connection.getRepository(Match)
             .createQueryBuilder('match')

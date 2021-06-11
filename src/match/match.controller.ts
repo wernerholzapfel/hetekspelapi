@@ -13,10 +13,16 @@ export class MatchController {
         return this.service.findMatches();
     }
 
+    @Get('fullscore')
+    async getFullScore(): Promise<Match[]> {
+        return this.service.getFullScore();
+    }
+
     @Get(':id')
     async getMatch( @Param('id') id: string): Promise<Match> {
         return this.service.findMatch(id);
     }
+
 
     @Put()
     async create(@Req() req, @Body() createMatchDto: UpdateMatchDto) {

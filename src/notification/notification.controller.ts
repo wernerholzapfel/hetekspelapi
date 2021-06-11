@@ -1,4 +1,4 @@
-import {Controller, Post, Req} from '@nestjs/common';
+import {Controller, Get, Post, Req} from '@nestjs/common';
 import {NotificationService} from "./notification.service";
 
 @Controller('notification')
@@ -10,5 +10,10 @@ export class NotificationController {
     @Post()
     async createTotalStand(@Req() req) {
         return this.service.sendNotification();
+    }
+
+    @Post('reminder')
+    async reminderNotification(@Req() req) {
+        return this.service.sendReminderNotifcation();
     }
 }
