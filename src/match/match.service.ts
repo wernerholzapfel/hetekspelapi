@@ -49,6 +49,7 @@ export class MatchService {
                 createdDate: match.createdDate,
                 participants: match.matchPredictions.map(mp => {
                     return {
+                        id: mp.participant.id,
                         displayName: mp.participant.displayName
                     }
                 })
