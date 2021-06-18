@@ -14,6 +14,11 @@ export class MatchPredictionController {
         return this.service.findMatchesForLoggedInUser(req.user.uid);
     }
 
+    @Get('today')
+    async findTodaysMatchesForLoggedInUser(@Req() req): Promise<MatchPrediction[]> {
+        return this.service.findTodaysMatchesForLoggedInUser(req.user.uid);
+    }
+
     @Get(':id')
     async findMatchesForParticipant(@Req() req,  @Param('id') id: string): Promise<MatchPrediction[]> {
         return this.service.findMatchesForParticipant(id);

@@ -20,20 +20,36 @@ export class StandService {
         this.logger.log('getSortedPositionStand');
         let previousPosition = 1;
 
-        return sortedStand.map((participant, index) => {
-            if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
-                return {
-                    ...participant,
-                    position: previousPosition,
-                };
-            } else {
-                previousPosition = index + 1;
-                return {
-                    ...participant,
-                    position: index + 1,
-                };
-            }
-        });
+
+        return sortedStand
+            .map((participant, index) => {
+                if (index > 0 && participant && participant.matchPoints === sortedStand[index - 1].matchPoints) {
+                    return {
+                        ...participant,
+                        matchPosition: previousPosition,
+                    };
+                } else {
+                    previousPosition = index + 1;
+                    return {
+                        ...participant,
+                        matchPosition: index + 1,
+                    };
+                }
+            })
+            .map((participant, index) => {
+                if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
+                    return {
+                        ...participant,
+                        position: previousPosition,
+                    };
+                } else {
+                    previousPosition = index + 1;
+                    return {
+                        ...participant,
+                        position: index + 1,
+                    };
+                }
+            });
     }
 
     async createTotalStand(): Promise<any[]> {
@@ -145,7 +161,7 @@ export class StandService {
             .addSelect('knockout.ordering')
             .addSelect('match.ordering')
             .leftJoin('participant.matchPredictions', 'matchPredictions', 'matchPredictions.spelpunten > 0')
-            .leftJoin('matchPredictions.match', 'match', )
+            .leftJoin('matchPredictions.match', 'match',)
             .leftJoin('participant.poulePredictions', 'poulePredictions', 'poulePredictions.spelpunten > 0')
             .leftJoin('participant.knockoutPredictions', 'knockoutPredictions', 'knockoutPredictions.homeSpelpunten > 0 or knockoutPredictions.awaySpelpunten > 0 or knockoutPredictions.winnerSpelpunten > 0')
             .leftJoin('knockoutPredictions.knockout', 'knockout')
@@ -164,6 +180,7 @@ export class StandService {
                 return {
                     ...t,
                     deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
+                    deltaMatchPosition: previousTable.find(pt => pt.id === t.id).matchPosition - t.matchPosition,
                     deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
                     deltePoulePoints: t.poulePoints - previousTable.find(pt => pt.id === t.id).poulePoints,
                     deltaKnockoutPoints: t.knockoutPoints - previousTable.find(pt => pt.id === t.id).knockoutPoints,
@@ -229,7 +246,7 @@ export class StandService {
             });
     }
 
-    determineKoPoints(knockoutPrediction: KnockoutPrediction, knockoutTeams: Team[] | {id: string}[], round: string, homeTeam: boolean): number {
+    determineKoPoints(knockoutPrediction: KnockoutPrediction, knockoutTeams: Team[] | { id: string }[], round: string, homeTeam: boolean): number {
         if (knockoutPrediction.knockout.round === round) {
             const teamOk = !!knockoutTeams.find(kt => kt.id === (homeTeam ? knockoutPrediction.homeTeam.id : knockoutPrediction.awayTeam.id));
 

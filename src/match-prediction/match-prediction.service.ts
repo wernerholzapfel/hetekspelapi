@@ -58,6 +58,25 @@ async findMatches(): Promise<Match[]> {
         return combinedMatchPredictions;
     }
 
+    async findTodaysMatchesForLoggedInUser(firebaseIdentifier: string): Promise<MatchPrediction[]> {
+
+        const today = new Date(new Date().setHours(0,0,0,0));
+        const tomorrow = new Date(new Date().setHours(23,59,59,0));
+        const matchPredictions = await this.connection.getRepository(MatchPrediction)
+            .createQueryBuilder('matchprediction')
+            .leftJoin('matchprediction.participant', 'participant')
+            .leftJoinAndSelect('matchprediction.match', 'match')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .andWhere('match.date <= :tomorrow', {tomorrow})
+            .andWhere('match.date >= :today', {today})
+            .orderBy('match.ordering')
+            .getMany();
+
+        return matchPredictions;
+    }
+
     async findMatchesForParticipant(participantId: string): Promise<MatchPrediction[]> {
         const matchPredictions = await this.connection.getRepository(MatchPrediction)
             .createQueryBuilder('matchprediction')
