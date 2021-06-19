@@ -28,6 +28,7 @@ import {Headline} from "./headline/headline.entity";
 import {StatsModule} from './stats/stats.module';
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
+import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
 
 @Module({
     imports: [
@@ -73,7 +74,7 @@ import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
     providers: [AppService,
         {
             provide: APP_INTERCEPTOR,
-            useClass: CacheInterceptor,
+            useClass: CustomHttpCacheInterceptor,
         }, {
             provide: APP_INTERCEPTOR,
             useClass: InvalidateCacheInterceptor,

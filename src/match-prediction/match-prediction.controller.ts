@@ -15,7 +15,6 @@ export class MatchPredictionController {
     }
 
     @Get('today')
-    @CacheTTL(1)
     async findTodaysMatchesForLoggedInUser(@Req() req): Promise<MatchPrediction[]> {
         return this.service.findTodaysMatchesForLoggedInUser(req.user.uid);
     }

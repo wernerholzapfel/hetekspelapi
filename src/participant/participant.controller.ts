@@ -24,7 +24,6 @@ export class ParticipantController {
     }
 
     @Get('mine')
-    @CacheTTL(1)
     async find(@Req() req): Promise<Participant> {
         return this.participantsService.find(req.user.uid);
     }
