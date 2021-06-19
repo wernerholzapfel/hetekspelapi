@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post, Req} from '@nestjs/common';
+import {Body, CacheTTL, Controller, Get, Param, Post, Req} from '@nestjs/common';
 import {CreateMatchPredictionDto} from './create-match-prediction.dto';
 import {MatchPrediction} from './match-prediction.entity';
 import {MatchPredictionService} from './match-prediction.service';
@@ -15,6 +15,7 @@ export class MatchPredictionController {
     }
 
     @Get('today')
+    @CacheTTL(1)
     async findTodaysMatchesForLoggedInUser(@Req() req): Promise<MatchPrediction[]> {
         return this.service.findTodaysMatchesForLoggedInUser(req.user.uid);
     }
