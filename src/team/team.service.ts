@@ -87,7 +87,7 @@ export class TeamService {
                 .leftJoin('knockout', 'knockout')
                 .update(KnockoutPrediction)
                 .set({
-                    homeSpelpunten: team.isEliminated ? null : 20,
+                    homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
                 })
                 .where("id IN(:...ids)", { ids: [1,2,3] })
                 .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
@@ -105,7 +105,7 @@ export class TeamService {
                 .leftJoin('knockout', 'knockout')
                 .update(KnockoutPrediction)
                 .set({
-                    awaySpelpunten: team.isEliminated? null :20,
+                    awaySpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
                 })
                 .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
                 .andWhere('awayTeam.id = :teamId', {teamId: team.id})
