@@ -22,6 +22,21 @@ export class StandService {
 
 
         return sortedStand
+            .sort((a, b) => {
+                if (b.matchPoints > a.matchPoints) {
+                    return 1
+                }
+                if (b.matchPoints < a.matchPoints) {
+                    return -1
+                }
+                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                    return -1;
+                }
+                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                    return 1;
+                }
+                return 0;
+            })
             .map((participant, index) => {
                 if (index > 0 && participant && participant.matchPoints === sortedStand[index - 1].matchPoints) {
                     return {
@@ -35,6 +50,20 @@ export class StandService {
                         matchPosition: index + 1,
                     };
                 }
+            }).sort((a, b) => {
+                if (b.totalPoints > a.totalPoints) {
+                    return 1
+                }
+                if (b.totalPoints < a.totalPoints) {
+                    return -1
+                }
+                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                    return -1;
+                }
+                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                    return 1;
+                }
+                return 0;
             })
             .map((participant, index) => {
                 if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
