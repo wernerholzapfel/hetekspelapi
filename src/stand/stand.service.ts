@@ -20,37 +20,8 @@ export class StandService {
         this.logger.log('getSortedPositionStand');
         let previousPosition = 1;
 
-
-        return sortedStand
+        const sortedMatchStand = sortedStand
             .sort((a, b) => {
-                if (b.matchPoints > a.matchPoints) {
-                    return 1
-                }
-                if (b.matchPoints < a.matchPoints) {
-                    return -1
-                }
-                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
-                    return -1;
-                }
-                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
-                    return 1;
-                }
-                return 0;
-            })
-            .map((participant, index) => {
-                if (index > 0 && participant && participant.matchPoints === sortedStand[index - 1].matchPoints) {
-                    return {
-                        ...participant,
-                        matchPosition: previousPosition,
-                    };
-                } else {
-                    previousPosition = index + 1;
-                    return {
-                        ...participant,
-                        matchPosition: index + 1,
-                    };
-                }
-            }).sort((a, b) => {
                 if (b.totalPoints > a.totalPoints) {
                     return 1
                 }
@@ -64,8 +35,7 @@ export class StandService {
                     return 1;
                 }
                 return 0;
-            })
-            .map((participant, index) => {
+            }).map((participant, index) => {
                 if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
                     return {
                         ...participant,
@@ -79,6 +49,37 @@ export class StandService {
                     };
                 }
             });
+
+        previousPosition = 1;
+
+        return sortedMatchStand.sort((a, b) => {
+            if (b.matchPoints > a.matchPoints) {
+                return 1
+            }
+            if (b.matchPoints < a.matchPoints) {
+                return -1
+            }
+            if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                return -1;
+            }
+            if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                return 1;
+            }
+            return 0;
+        }).map((participant, index) => {
+            if (index > 0 && participant && participant.matchPoints === sortedStand[index - 1].matchPoints) {
+                return {
+                    ...participant,
+                    matchPosition: previousPosition,
+                };
+            } else {
+                previousPosition = index + 1;
+                return {
+                    ...participant,
+                    matchPosition: index + 1,
+                };
+            }
+        })
     }
 
     async createTotalStand(): Promise<any[]> {
