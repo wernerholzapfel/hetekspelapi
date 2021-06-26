@@ -295,6 +295,21 @@ export class StandService {
         } else {
             return null
         }
+    }
+
+    getKOPoints(round) {
+        switch (round) {
+            case '16':
+                return 20
+            case '8':
+                return 35
+            case '4':
+                return 60
+            case '2':
+                return 100
+            default:
+                return null
+        }
 
     }
 

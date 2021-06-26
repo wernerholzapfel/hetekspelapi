@@ -36,7 +36,6 @@ export class TeamService {
                 .where('knockout.round = :round', {round: '16'})
                 .getMany()
 
-            this.logger.log(roundIds)
             const team = await transactionalEntityManager.getRepository(Team)
                 .save(teamPositionDto)
                 .catch((err) => {
@@ -89,7 +88,6 @@ export class TeamService {
                 .set({
                     homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
                 })
-                .where("id IN(:...ids)", { ids: [1,2,3] })
                 .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
                 .andWhere('homeTeam.id = :teamId', {teamId: team.id})
                 .execute()
