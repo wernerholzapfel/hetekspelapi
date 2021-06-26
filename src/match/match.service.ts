@@ -34,7 +34,7 @@ export class MatchService {
             .take(3)
             .getMany();
 
-        return matches.map(match => {
+         matches.map(match => {
             return {
                 id: match.id,
                 homeTeam: match.homeTeam,
@@ -55,6 +55,7 @@ export class MatchService {
                 })
             }
         })
+        return [];
     }
 
     async findMatch(matchId): Promise<Match> {
