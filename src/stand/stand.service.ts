@@ -22,37 +22,6 @@ export class StandService {
 
         const sortedMatchStand = sortedStand
             .sort((a, b) => {
-                if (b.totalPoints > a.totalPoints) {
-                    return 1
-                }
-                if (b.totalPoints < a.totalPoints) {
-                    return -1
-                }
-                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
-                    return -1;
-                }
-                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
-                    return 1;
-                }
-                return 0;
-            }).map((participant, index) => {
-                if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
-                    return {
-                        ...participant,
-                        position: previousPosition,
-                    };
-                } else {
-                    previousPosition = index + 1;
-                    return {
-                        ...participant,
-                        position: index + 1,
-                    };
-                }
-            });
-
-        previousPosition = 1;
-
-        return sortedMatchStand.sort((a, b) => {
             if (b.matchPoints > a.matchPoints) {
                 return 1
             }
@@ -80,6 +49,40 @@ export class StandService {
                 };
             }
         })
+
+        previousPosition = 1;
+
+        return sortedMatchStand
+            .sort((a, b) => {
+                if (b.totalPoints > a.totalPoints) {
+                    return 1
+                }
+                if (b.totalPoints < a.totalPoints) {
+                    return -1
+                }
+                if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                    return -1;
+                }
+                if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                    return 1;
+                }
+                return 0;
+            })
+            .map((participant, index) => {
+                if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
+                    return {
+                        ...participant,
+                        position: previousPosition,
+                    };
+                } else {
+                    previousPosition = index + 1;
+                    return {
+                        ...participant,
+                        position: index + 1,
+                    };
+                }
+            });
+
     }
 
     async createTotalStand(): Promise<any[]> {
@@ -163,7 +166,7 @@ export class StandService {
             .getRepository(Knockout)
             .createQueryBuilder('knockout')
             .select('knockout.ordering')
-            .where('knockout.homeScore is not Null')
+            .where('knockout.homeScore is not NULL')
             .orderBy('knockout.ordering', "DESC")
             .getOne()
 
@@ -183,16 +186,11 @@ export class StandService {
         const participants: any = await this.connection
             .getRepository(Participant)
             .createQueryBuilder('participant')
-            .select(['participant.displayName', 'participant.id', 'matchPredictions.spelpunten'])
-            .addSelect('poulePredictions.spelpunten')
+            .select(['participant.displayName', 'participant.id'])
             .addSelect('knockoutPredictions.homeSpelpunten')
             .addSelect('knockoutPredictions.awaySpelpunten')
             .addSelect('knockoutPredictions.winnerSpelpunten')
             .addSelect('knockout.ordering')
-            .addSelect('match.ordering')
-            .leftJoin('participant.matchPredictions', 'matchPredictions', 'matchPredictions.spelpunten > 0')
-            .leftJoin('matchPredictions.match', 'match',)
-            .leftJoin('participant.poulePredictions', 'poulePredictions', 'poulePredictions.spelpunten > 0')
             .leftJoin('participant.knockoutPredictions', 'knockoutPredictions', 'knockoutPredictions.homeSpelpunten > 0 or knockoutPredictions.awaySpelpunten > 0 or knockoutPredictions.winnerSpelpunten > 0')
             .leftJoin('knockoutPredictions.knockout', 'knockout')
             .where('participant.isAllowed')
@@ -203,7 +201,18 @@ export class StandService {
             previousTable = table.val()
         });
 
-        let currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participants, maxMatchId.ordering))
+
+        const participantsMerged = previousTable.map(pt => {
+            return {
+                ...pt,
+                knockoutPoints: participants.find(p => p.id === pt.id).knockoutPredictions.reduce((a, b) => {
+                    return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
+                }, 0),
+
+            }
+        })
+
+        let currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participantsMerged, maxMatchId.ordering))
 
         if (previousTable && previousTable.length > 0) {
             currentTable = currentTable.map(t => {
@@ -231,24 +240,25 @@ export class StandService {
 
     createStandTillMatchId(participants: any[], matchId: number) {
         return participants
+            // .map(participant => {
+            //     return {
+            //         ...participant,
+            //         matchPoints: participant.matchPredictions.reduce((a, b) => {
+            //             if (b.match.ordering <= matchId) {
+            //                 return a + b.spelpunten;
+            //             } else {
+            //                 return a;
+            //             }
+            //         }, 0),
+            //         poulePoints: participant.poulePredictions.reduce((a, b) => {
+            //             return a + b.spelpunten;
+            //         }, 0),
+            //         knockoutPoints: participant.knockoutPredictions.reduce((a, b) => {
+            //             return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
+            //         }, 0),
+            //     };
+            // })
             .map(participant => {
-                return {
-                    ...participant,
-                    matchPoints: participant.matchPredictions.reduce((a, b) => {
-                        if (b.match.ordering <= matchId) {
-                            return a + b.spelpunten;
-                        } else {
-                            return a;
-                        }
-                    }, 0),
-                    poulePoints: participant.poulePredictions.reduce((a, b) => {
-                        return a + b.spelpunten;
-                    }, 0),
-                    knockoutPoints: participant.knockoutPredictions.reduce((a, b) => {
-                        return a + b.homeSpelpunten + b.awaySpelpunten + b.winnerSpelpunten;
-                    }, 0),
-                };
-            }).map(participant => {
                 return {
                     id: participant.id,
                     displayName: participant.displayName,
