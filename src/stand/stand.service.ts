@@ -35,8 +35,10 @@ export class StandService {
                 return 1;
             }
             return 0;
-        }).map((participant, index) => {
-            if (index > 0 && participant && participant.matchPoints === sortedStand[index - 1].matchPoints) {
+        });
+
+        const positionSortedMatchStand = sortedMatchStand.map((participant, index) => {
+            if (index > 0 && participant && participant.matchPoints === sortedMatchStand[index - 1].matchPoints) {
                 return {
                     ...participant,
                     matchPosition: previousPosition,
@@ -52,7 +54,7 @@ export class StandService {
 
         previousPosition = 1;
 
-        return sortedMatchStand
+        const sortedtotaalStand = positionSortedMatchStand
             .sort((a, b) => {
                 if (b.totalPoints > a.totalPoints) {
                     return 1
@@ -68,8 +70,9 @@ export class StandService {
                 }
                 return 0;
             })
-            .map((participant, index) => {
-                if (index > 0 && participant && participant.totalPoints === sortedStand[index - 1].totalPoints) {
+
+            const sortedTotaalStandPosition = sortedtotaalStand.map((participant, index) => {
+                if (index > 0 && participant && participant.totalPoints === sortedtotaalStand[index - 1].totalPoints) {
                     return {
                         ...participant,
                         position: previousPosition,
@@ -82,6 +85,8 @@ export class StandService {
                     };
                 }
             });
+
+        return sortedTotaalStandPosition
 
     }
 
@@ -216,6 +221,9 @@ export class StandService {
 
         if (previousTable && previousTable.length > 0) {
             currentTable = currentTable.map(t => {
+                this.logger.log(previousTable.find(pt => pt.id === t.id).displayName)
+                this.logger.log(previousTable.find(pt => pt.id === t.id).matchPosition)
+                this.logger.log(t.matchPosition)
                 return {
                     ...t,
                     deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
