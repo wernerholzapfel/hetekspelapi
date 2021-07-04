@@ -149,7 +149,7 @@ export class KnockoutService {
                             winnerSpelpunten: 175,
                         })
                         .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                        .andWhere('homeTeam.id = :teamId', {teamId: item.winnerTeam.id})
+                        .andWhere('selectedTeam.id = :teamId', {teamId: item.winnerTeam.id})
                         .execute()
                         .catch((err) => {
                             throw new HttpException({
