@@ -140,7 +140,7 @@ export class KnockoutService {
                                 statusCode: HttpStatus.BAD_REQUEST,
                             }, HttpStatus.BAD_REQUEST);
                         });
-                if (round === '2') {
+                if (knockout.round === '2') {
                     await transactionalEntityManager
                         .createQueryBuilder()
                         .leftJoin('knockout', 'knockout')
