@@ -7,14 +7,15 @@ import {
     NestMiddleware,
     UnauthorizedException
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import 'dotenv/config';
 import * as admin from 'firebase-admin';
-import {getRepository} from "typeorm";
+import {Repository} from 'typeorm';
 import {Hetekspel} from "./hetekspel/hetekspel.entity";
 
 @Injectable()
 export class AddFireBaseUserToRequest implements NestMiddleware {
-    private readonly logger = new Logger('AddFireBaseUserToRequest', true);
+    private readonly logger = new Logger('AddFireBaseUserToRequest', {timestamp: true});
 
     use(req, res, next) {
         const extractedToken = getToken(req.headers);
@@ -45,7 +46,7 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
 
 @Injectable()
 export class AdminMiddleware implements NestMiddleware {
-    private readonly logger = new Logger('AdminMiddleware', true);
+    private readonly logger = new Logger('AdminMiddleware', {timestamp: true});
 
     use(req, res, next) {
         const extractedToken = getToken(req.headers);
@@ -69,12 +70,17 @@ export class AdminMiddleware implements NestMiddleware {
 
 @Injectable()
 export class IsRegistrationClosed implements NestMiddleware {
-    private readonly logger = new Logger('IsRegistrationClosed', true);
+
+    constructor(@InjectRepository(Hetekspel)
+        private readonly hetEkSpelRepo: Repository<Hetekspel>) {
+
+}
+    private readonly logger = new Logger('IsRegistrationClosed', {timestamp: true});
 
     use(req, res, next) {
         this.logger.log('check is registrationclosed');
 
-        return getRepository(Hetekspel).findOne().then(hetekspel => {
+        return this.hetEkSpelRepo.findOneBy({}).then(hetekspel => {
             this.logger.log(hetekspel.deadline);
             this.logger.log(new Date());
             hetekspel.deadline < new Date()

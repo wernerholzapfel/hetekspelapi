@@ -3,7 +3,7 @@ import {StandService} from './stand.service';
 
 @Controller('stand')
 export class StandController {
-    private readonly logger = new Logger('StandController', true);
+    private readonly logger = new Logger('StandController', {timestamp: true});
 
     constructor(private readonly service: StandService) {
     }

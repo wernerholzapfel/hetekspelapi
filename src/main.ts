@@ -5,15 +5,14 @@ import * as admin from 'firebase-admin';
 import {CacheModule, ValidationPipe} from "@nestjs/common";
 import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
 
-
 admin.initializeApp({
     credential: admin.credential.cert({
             // @ts-ignore
             type: process.env.type,
             project_id: process.env.project_id,
             private_key_id: process.env.private_key_id,
-            // private_key: process.env.private_key,
-            private_key:  JSON.parse(process.env.private_key),
+            private_key: process.env.private_key,
+            // private_key:  JSON.parse(process.env.private_key),
             client_email: process.env.client_email,
             client_id: process.env.client_id,
             auth_uri: 'https://accounts.google.com/o/oauth2/auth',

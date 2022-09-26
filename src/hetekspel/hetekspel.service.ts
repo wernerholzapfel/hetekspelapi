@@ -1,19 +1,17 @@
 import {Injectable} from '@nestjs/common';
-import {Connection, Repository} from "typeorm";
+import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Hetekspel} from "./hetekspel.entity";
 
 @Injectable()
 export class HetekspelService {
 
-    constructor(private readonly connection: Connection,
-                @InjectRepository(Hetekspel)
-                private readonly headlineRepository: Repository<Hetekspel>,) {
+    constructor(@InjectRepository(Hetekspel)
+                private readonly hetEkSpelRepo: Repository<Hetekspel>) {
     }
 
     async find(): Promise<Hetekspel> {
-        return await this.connection
-            .getRepository(Hetekspel)
+        return await this.hetEkSpelRepo
             .createQueryBuilder('hetekspel')
             .getOne();
     }

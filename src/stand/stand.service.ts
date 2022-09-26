@@ -1,5 +1,5 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {Connection} from 'typeorm';
+import {Repository} from 'typeorm';
 import {Participant} from '../participant/participant.entity';
 import * as admin from 'firebase-admin';
 import {Hetekspel} from "../hetekspel/hetekspel.entity";
@@ -8,12 +8,21 @@ import {Knockout} from "../knockout/knockout.entity";
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import {UpdateKnockoutDto} from "../knockout/create-knockout.dto";
 import {Team} from "../team/team.entity";
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class StandService {
-    private readonly logger = new Logger('StandService', true);
+    private readonly logger = new Logger('StandService', {timestamp: true});
 
-    constructor(private readonly connection: Connection) {
+    constructor(
+        @InjectRepository(Hetekspel)
+        private readonly hetEKSPELRepo: Repository<Hetekspel>, 
+        @InjectRepository(Participant)
+        private readonly ParticipantRepo: Repository<Participant>,
+        @InjectRepository(Knockout)
+        private readonly KnockoutRepo: Repository<Knockout>,
+        @InjectRepository(Match)
+        private readonly MatchRepo: Repository<Match>) {
     }
 
     private getSortedPositionStand(sortedStand) {
@@ -165,10 +174,9 @@ export class StandService {
 
         const db = admin.database();
         let previousTable = [];
-        const hetEkspel: Hetekspel = await this.connection.getRepository(Hetekspel).findOne();
+        const hetEkspel: Hetekspel = await this.hetEKSPELRepo.findOneBy({});
 
-        let maxMatchId: any = await this.connection
-            .getRepository(Knockout)
+        let maxMatchId: any = await this.KnockoutRepo
             .createQueryBuilder('knockout')
             .select('knockout.ordering')
             .where('knockout.homeScore is not NULL')
@@ -176,8 +184,7 @@ export class StandService {
             .getOne()
 
         if (!maxMatchId) {
-            maxMatchId = await this.connection
-                .getRepository(Match)
+            maxMatchId = await this.MatchRepo
                 .createQueryBuilder('match')
                 .select('match.ordering')
                 .where('match.homeScore is not Null')
@@ -188,8 +195,7 @@ export class StandService {
             maxMatchId = {ordering: 0}
         }
 
-        const participants: any = await this.connection
-            .getRepository(Participant)
+        const participants: any = await this.ParticipantRepo
             .createQueryBuilder('participant')
             .select(['participant.displayName', 'participant.id'])
             .addSelect('knockoutPredictions.homeSpelpunten')
@@ -239,7 +245,7 @@ export class StandService {
         const docRef = db.ref(`${maxMatchId.ordering}`);
         docRef.set(currentTable);
 
-        await this.connection.getRepository(Hetekspel)
+        await this.hetEKSPELRepo
             .save({...hetEkspel, currentTable: maxMatchId.ordering})
 
         return currentTable;

@@ -5,7 +5,7 @@ import {Team} from './team.entity';
 
 @Controller('team')
 export class TeamController {
-    private readonly logger = new Logger('TeamsController', true);
+    private readonly logger = new Logger('TeamsController', {timestamp: true});
 
     constructor(private readonly service: TeamService) {
     }

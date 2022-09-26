@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Connection, getManager, Repository} from 'typeorm';
+import {getManager, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Knockout} from "./knockout.entity";
 import {CreateKnockoutDto, UpdateKnockoutDto} from "./create-knockout.dto";
@@ -11,20 +11,21 @@ import {StandService} from "../stand/stand.service";
 
 @Injectable()
 export class KnockoutService {
-    constructor(private readonly connection: Connection,
-                @InjectRepository(Knockout)
-                private readonly repository: Repository<Knockout>,
+    constructor(                @InjectRepository(Knockout)
+                private readonly KnockoutRepo: Repository<Knockout>,
+                                @InjectRepository(Participant)
+                private readonly participantRepo: Repository<Participant>,
                 private standService: StandService) {
     }
 
     async findKnockouts(firebaseIdentifier: string): Promise<any[]> { // todo model aanmaken
 
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
 
-        const knockout: any[] = await this.connection.getRepository(Knockout)
+        const knockout: any[] = await this.KnockoutRepo
             .createQueryBuilder('knockout')
             .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
             .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
@@ -45,7 +46,7 @@ export class KnockoutService {
 
     async getKnockoutResults(): Promise<any[]> { // todo model aanmaken
 
-        const knockout: any[] = await this.connection.getRepository(Knockout)
+        const knockout: any[] = await this.KnockoutRepo
             .createQueryBuilder('knockout')
             .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
             .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
@@ -66,7 +67,7 @@ export class KnockoutService {
 
     async create(items: CreateKnockoutDto[]): Promise<Knockout[]> {
         await items.forEach(async item => {
-            await this.repository.save(item)
+            await this.KnockoutRepo.save(item)
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -74,14 +75,14 @@ export class KnockoutService {
                     }, HttpStatus.BAD_REQUEST);
                 });
         })
-        return await this.repository.find()
+        return await this.KnockoutRepo.find()
     }
 
     async update(item: UpdateKnockoutDto): Promise<Knockout> {
         return await getManager().transaction(async transactionalEntityManager => {
 
             // opslaan match in database
-            await this.repository.save(item)
+            await this.KnockoutRepo.save(item)
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -89,7 +90,7 @@ export class KnockoutService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-            const knockout = await this.connection.getRepository(Knockout)
+            const knockout = await this.KnockoutRepo
                 .createQueryBuilder('knockout')
                 .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
                 .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')

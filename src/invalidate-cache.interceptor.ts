@@ -15,7 +15,7 @@ import {Cache} from 'cache-manager'
 export class InvalidateCacheInterceptor implements NestInterceptor {
     constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
     }
-    private readonly logger = new Logger('InvalidateCacheInterceptor', true);
+    private readonly logger = new Logger('InvalidateCacheInterceptor', {timestamp: true});
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         this.logger.log(context.switchToHttp().getRequest().method)

@@ -7,6 +7,7 @@ import {Hetekspel} from "./hetekspel.entity";
 @Module({
   imports: [TypeOrmModule.forFeature([Hetekspel])],
   providers: [HetekspelService],
-  controllers: [HetekspelController]
+  controllers: [HetekspelController],
+  exports: [HetekspelService]
 })
 export class HetekspelModule {}

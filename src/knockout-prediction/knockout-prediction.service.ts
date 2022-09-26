@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Brackets, Connection, DeleteResult, Repository} from 'typeorm';
+import {Brackets, DeleteResult, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Participant} from '../participant/participant.entity';
 import {Match} from '../match/match.entity';
@@ -10,15 +10,18 @@ import {Team} from "../team/team.entity";
 @Injectable()
 export class KnockoutPredictionService {
 
-    constructor(private connection: Connection,
-                @InjectRepository(KnockoutPrediction)
-                private readonly knockoutPredictionRepository: Repository<KnockoutPrediction>) {
+    constructor(@InjectRepository(KnockoutPrediction)
+                private readonly knockoutPredictionRepository: Repository<KnockoutPrediction>,
+                @InjectRepository(Participant)
+                private readonly participantRepo: Repository<Participant>,
+                @InjectRepository(Team)
+                private readonly teamRepo: Repository<Team>) {
 
     }
 
     async findKnockoutForParticipant(participantId: string): Promise<KnockoutPrediction[]> {
-        return await this.connection
-            .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+        return await this.knockoutPredictionRepository
+        .createQueryBuilder('knockoutPrediction')
             .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
             .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
             .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
@@ -33,8 +36,8 @@ export class KnockoutPredictionService {
     }
 
     async findKnockoutForTeamInRound(roundId, teamId: string): Promise<any> {
-        const team = await this.connection
-            .getRepository(Team).createQueryBuilder('team')
+        const team = await this.teamRepo
+        .createQueryBuilder('team')
             .leftJoinAndSelect('team.knockoutsHome', 'home')
             .leftJoinAndSelect('team.knockoutsAway', 'away')
             .leftJoinAndSelect('team.knockoutsWinner', 'winner')
@@ -42,8 +45,8 @@ export class KnockoutPredictionService {
             .getOne()
 
         if (roundId === '1') {
-            const kos = await this.connection
-                .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+            const kos = await this.knockoutPredictionRepository 
+                .createQueryBuilder('knockoutPrediction')
                 .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
                 .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
                 .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
@@ -69,8 +72,7 @@ export class KnockoutPredictionService {
                 })
             }
         } else {
-            const kos = await this.connection
-                .getRepository(KnockoutPrediction).createQueryBuilder('knockoutPrediction')
+            const kos = await this.knockoutPredictionRepository.createQueryBuilder('knockoutPrediction')
                 .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
                 .leftJoinAndSelect('knockoutPrediction.homeTeam', 'homeTeam')
                 .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
@@ -102,7 +104,7 @@ export class KnockoutPredictionService {
 
     async createKnockoutPrediction(items: CreateKnockoutPredictionDto[], firebaseIdentifier): Promise<KnockoutPrediction[]> {
 
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
@@ -122,7 +124,7 @@ export class KnockoutPredictionService {
     }
 
     async createKnockoutPredictionOne(item: CreateKnockoutPredictionDto, firebaseIdentifier): Promise<any> {
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
@@ -143,12 +145,12 @@ export class KnockoutPredictionService {
     }
 
     async deleteKnockoutPredictions(firebaseIdentifier) : Promise<DeleteResult> {
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
 
-        return await this.connection
+        return await this.knockoutPredictionRepository
             .createQueryBuilder()
             .delete()
             .from(KnockoutPrediction)

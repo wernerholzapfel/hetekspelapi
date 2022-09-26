@@ -32,12 +32,11 @@ import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
 
 @Module({
     imports: [
+        TypeOrmModule.forFeature([Hetekspel]),
         TypeOrmModule.forRoot({
             type: 'postgres',
             url: process.env.DATABASE_URL,
-            extra: {
-                ssl: process.env.DB_SSL
-            },
+            ssl:  {rejectUnauthorized: false},
             entities: [
                 Participant,
                 Team,
@@ -50,20 +49,21 @@ import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
                 Hetekspel,
                 Headline,
             ],
-            logging: false,
+            logging: true,
             synchronize: false, // DEV only, do not use on PROD!
-        }), ParticipantsModule,
+        }), 
+        ParticipantsModule,
         CacheModule.register({
             ttl: null, // seconds
             // maximum number of items in cache
         }),
         TeamModule,
-        MatchModule,
         MatchPredictionModule,
         PoulePredictionModule,
         KnockoutModule,
         KnockoutPredictionModule,
         StandModule,
+        MatchModule,
         NotificationModule,
         PushtokenModule,
         HetekspelModule,

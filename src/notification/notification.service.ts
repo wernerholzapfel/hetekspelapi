@@ -1,18 +1,21 @@
 import {Injectable} from '@nestjs/common';
-import {Connection, getConnection} from "typeorm";
+import {Repository} from "typeorm";
 import * as admin from "firebase-admin";
 import {Pushtoken} from "../pushtoken/pushtoken.entity";
 import {Participant} from "../participant/participant.entity";
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class NotificationService {
 
-    constructor(private readonly connection: Connection) {
+    constructor(@InjectRepository(Pushtoken)
+    private readonly pushTokenRepo: Repository<Pushtoken>,
+    @InjectRepository(Participant)
+    private readonly participantRepo: Repository<Participant>) {
     }
 
     async sendNotification(): Promise<admin.messaging.MessagingDevicesResponse[]> {
-        const pushtokens: Pushtoken[] = await this.connection
-            .getRepository(Pushtoken)
+        const pushtokens: Pushtoken[] = await this.pushTokenRepo
             .createQueryBuilder('pushtoken')
             .leftJoin('pushtoken.participant', 'participant')
             .select(['participant.id', 'participant.displayName', 'pushtoken.pushToken'])
@@ -46,8 +49,7 @@ export class NotificationService {
     async sendReminderNotifcation() {
         const messagingDevicesResponse: any[] = []
 
-        const pushtokens: Pushtoken[] = await this.connection
-            .getRepository(Pushtoken)
+        const pushtokens: Pushtoken[] = await this.pushTokenRepo
             .createQueryBuilder('pushtoken')
             .leftJoin('pushtoken.participant', 'participant')
             .select(['participant.id', 'participant.displayName', 'pushtoken.pushToken'])
@@ -55,7 +57,7 @@ export class NotificationService {
             .getMany();
 
 
-        const participantsComplete = await this.connection.getRepository(Participant)
+        const participantsComplete = await this.participantRepo
             .createQueryBuilder('participant')
             .leftJoin('participant.matchPredictions', 'matchPredictions')
             .leftJoin('participant.poulePredictions', 'poulePredictions')
@@ -119,7 +121,7 @@ export class NotificationService {
                     if (error.code === 'messaging/invalid-registration-token' ||
                         error.code === 'messaging/registration-token-not-registered') {
                         console.log('delete this token: ' + response.token.pushToken)
-                        this.connection
+                        this.pushTokenRepo
                             .createQueryBuilder()
                             .update(Pushtoken)
                             .set({pushToken: null})

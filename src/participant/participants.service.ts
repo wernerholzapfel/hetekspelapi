@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {Connection, getConnection, Repository, UpdateResult} from 'typeorm';
+import {Repository, UpdateResult} from 'typeorm';
 
 import {Participant} from './participant.entity';
 import {InjectRepository} from '@nestjs/typeorm';
@@ -11,22 +11,32 @@ import * as Http from "http";
 
 @Injectable()
 export class ParticipantsService {
-    private readonly logger = new Logger('participantService', true);
+    private readonly logger = new Logger('participantService', {timestamp: true});
 
     constructor(@InjectRepository(Participant)
-                private readonly participantRepository: Repository<Participant>,
-                private readonly connection: Connection
+                private readonly participantRepo: Repository<Participant>,
+                @InjectRepository(Pushtoken)
+                private readonly pushTokenRepo: Repository<Pushtoken>
     ) {
     }
 
+    async getAllowedParticipants(): Promise<Participant[]> {
+        return this.participantRepo
+        .createQueryBuilder('participant')
+        .select('*')
+        .where('participant.isAllowed')
+        .orderBy('participant.createdDate', "ASC")
+        .getMany()    
+    }
+
     async findAll(): Promise<Participant[]> {
-        return this.participantRepository.find().catch((err) => {
+        return this.participantRepo.find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }
 
     async find(firebaseIdentifier: string): Promise<Participant> {
-        return await this.connection.getRepository(Participant)
+        return await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();    }
@@ -35,7 +45,7 @@ export class ParticipantsService {
         const newParticipant: Participant = Object.assign(participant);
         newParticipant.email = email.toLowerCase();
         newParticipant.firebaseIdentifier = uid;
-        return this.participantRepository.save(newParticipant)
+        return this.participantRepo.save(newParticipant)
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
@@ -45,18 +55,18 @@ export class ParticipantsService {
     }
 
     async addPushToken(body: AddPushTokenDto, firebaseIdentifier: string): Promise<({ pushToken: string; participant: Participant } & Pushtoken) | void> {
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
 
-        const pushtokenRecord = await this.connection.getRepository(Pushtoken)
+        const pushtokenRecord = await this.pushTokenRepo
             .createQueryBuilder('pushtoken')
             .where('pushtoken.pushToken = :pushtoken', {pushtoken: body.pushtoken})
             .getCount()
 
         if (pushtokenRecord < 1) {
-            return await this.connection.getRepository(Pushtoken)
+            return await this.pushTokenRepo
                 .save({participant: participant, pushToken: body.pushtoken})
                 .catch((err) => {
                     throw new HttpException({

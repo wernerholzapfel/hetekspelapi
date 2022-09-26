@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Connection, getManager, Repository} from 'typeorm';
+import {getManager, Repository} from 'typeorm';
 import {Match} from './match.entity';
 import {UpdateMatchDto} from './update-match.dto';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
@@ -7,13 +7,12 @@ import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class MatchService {
-    constructor(private readonly connection: Connection,
-                @InjectRepository(Match)
+    constructor(@InjectRepository(Match)
                 private readonly matchRepo: Repository<Match>) {
     }
 
     async findMatches(): Promise<Match[]> {
-        return await this.connection.getRepository(Match)
+        return await this.matchRepo
             .createQueryBuilder('match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
@@ -23,7 +22,7 @@ export class MatchService {
 
 
     async getFullScore(): Promise<any[]> {
-        const matches = await this.connection.getRepository(Match)
+        const matches = await this.matchRepo
             .createQueryBuilder('match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
@@ -59,7 +58,7 @@ export class MatchService {
     }
 
     async findMatch(matchId): Promise<Match> {
-        return await this.connection.getRepository(Match)
+        return await this.matchRepo
             .createQueryBuilder('match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')

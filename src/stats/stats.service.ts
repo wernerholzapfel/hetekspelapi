@@ -1,21 +1,30 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {Connection} from "typeorm";
+import {Repository} from "typeorm";
 import {Match} from "../match/match.entity";
 import {Team} from "../team/team.entity";
 import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
 import * as admin from "firebase-admin";
 import {Participant} from "../participant/participant.entity";
+import { InjectRepository } from '@nestjs/typeorm';
+import { Knockout } from '../knockout/knockout.entity';
 
 @Injectable()
 export class StatsService {
 
-    private readonly logger = new Logger('StatsService', true);
+    private readonly logger = new Logger('StatsService', {timestamp: true});
 
-    constructor(private readonly connection: Connection) {
+    constructor(@InjectRepository(Match)
+    private readonly matchRepo: Repository<Match>,
+    @InjectRepository(Team)
+    private readonly teamRepo: Repository<Team>,
+    @InjectRepository(KnockoutPrediction)
+                private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
+    @InjectRepository(Participant)
+                private readonly participantRepo: Repository<Participant>) {
     }
 
     async createTotoStats(): Promise<any[]> {
-        let matches: any[] = await this.connection.getRepository(Match)
+        let matches: any[] = await this.matchRepo
             .createQueryBuilder('match')
             .leftJoinAndSelect('match.matchPredictions', 'matchPredictions')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
@@ -55,7 +64,7 @@ export class StatsService {
     }
 
     async getFormInformation(): Promise<any> {
-        return this.connection.getRepository(Participant)
+        return this.participantRepo
             .createQueryBuilder('participant')
             .leftJoin('participant.matchPredictions', 'matchPredictions')
             .leftJoin('participant.poulePredictions', 'poulePredictions')
@@ -71,10 +80,10 @@ export class StatsService {
     }
 
     async createKnockoutStats(): Promise<any> {
-        const teams: any[] = await this.connection.getRepository(Team).createQueryBuilder('team')
+        const teams: any[] = await this.teamRepo.createQueryBuilder('team')
             .getMany()
 
-        const knockoutPredictions = await this.connection.getRepository(KnockoutPrediction)
+        const knockoutPredictions = await this.knockoutPredictionRepo
             .createQueryBuilder('kp')
             .leftJoinAndSelect('kp.homeTeam', 'homeTeam')
             .leftJoinAndSelect('kp.awayTeam', 'awayTeam')

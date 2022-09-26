@@ -1,6 +1,6 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import {Connection, Repository} from 'typeorm';
+import {Repository} from 'typeorm';
 import {Headline} from './headline.entity';
 import {CreateHeadlineDto} from './create-headline.dto';
 import {Participant} from "../participant/participant.entity";
@@ -8,14 +8,14 @@ import {Participant} from "../participant/participant.entity";
 @Injectable()
 export class HeadlineService {
 
-    constructor(private readonly connection: Connection,
-                @InjectRepository(Headline)
-                private readonly headlineRepository: Repository<Headline>,) {
+    constructor(@InjectRepository(Headline)
+                private readonly headlineRepository: Repository<Headline>,
+                @InjectRepository(Participant)
+                private readonly participantRepository: Repository<Participant>,) {
     }
 
     async findAll(): Promise<Headline[]> {
-        return await this.connection
-            .getRepository(Headline)
+        return await this.headlineRepository
             .createQueryBuilder('headline')
             .where('headline.isActive = :isActive', {isActive: true})
             .orderBy('headline.updatedDate', 'DESC')
@@ -24,7 +24,7 @@ export class HeadlineService {
 
 
     async create(headline: CreateHeadlineDto, firebaseIdentifier: string): Promise<Headline> {
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepository
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();

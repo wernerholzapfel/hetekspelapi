@@ -4,7 +4,7 @@ import {StatsService} from "./stats.service";
 @Controller('stats')
 export class StatsController {
 
-    private readonly logger = new Logger('StatsController', true);
+    private readonly logger = new Logger('StatsController', {timestamp: true});
 
     constructor(private readonly service: StatsService) {
     }

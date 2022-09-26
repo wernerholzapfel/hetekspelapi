@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Connection, Repository} from 'typeorm';
+import {Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Participant} from '../participant/participant.entity';
 import {PoulePrediction} from './poule-prediction.entity';
@@ -12,16 +12,17 @@ import {Match} from "../match/match.entity";
 @Injectable()
 export class PoulePredictionService {
 
-    constructor(private connection: Connection,
-                @InjectRepository(PoulePrediction)
-                private readonly poulePrediction: Repository<PoulePrediction>,
+    constructor(@InjectRepository(PoulePrediction)
+                private readonly poulePredictionRepo: Repository<PoulePrediction>,
+                @InjectRepository(Participant)
+                private readonly participantRepo: Repository<Participant>,
                 private matchPredictionService: MatchPredictionService) {
 
     }
 
 
     async findPoulePredictionsForLoggedInUser(firebaseIdentifier: string): Promise<PoulePrediction[]> {
-        const poulePredictions = await this.connection.getRepository(PoulePrediction)
+        const poulePredictions = await this.poulePredictionRepo
             .createQueryBuilder('pouleprediction')
             .leftJoinAndSelect('pouleprediction.team', 'team')
             .leftJoin('pouleprediction.participant', 'participant')
@@ -36,6 +37,8 @@ export class PoulePredictionService {
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'D'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'E'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'F'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'G'), true),
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'H'), true),
         ]
 
         return poulesBasedOnMatches.map(line => {
@@ -57,7 +60,7 @@ export class PoulePredictionService {
     }
 
     async findPoulePredictionsForParticipant(participantId: string): Promise<PoulePrediction[]> {
-        const poulePredictions = await this.connection.getRepository(PoulePrediction)
+        const poulePredictions = await this.poulePredictionRepo
             .createQueryBuilder('pouleprediction')
             .leftJoinAndSelect('pouleprediction.team', 'team')
             .leftJoin('pouleprediction.participant', 'participant')
@@ -82,12 +85,12 @@ export class PoulePredictionService {
 
     async createPoulePrediction(items: CreatePoulePredictionDto[], firebaseIdentifier): Promise<PoulePrediction[]> {
 
-        const participant = await this.connection.getRepository(Participant)
+        const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
 
-        return await this.poulePrediction.save(items.map(pp => {
+        return await this.poulePredictionRepo.save(items.map(pp => {
             if (!pp.team) {
                 console.log(pp)
             }

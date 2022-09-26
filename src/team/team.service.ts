@@ -1,6 +1,6 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import {Connection, getManager, Repository} from 'typeorm';
+import {getManager, Repository} from 'typeorm';
 import {Team} from './team.entity';
 import {CreateTeamDto, UpdateTeamPositionDto} from './create-team.dto';
 import {MatchPrediction} from "../match-prediction/match-prediction.entity";
@@ -11,17 +11,15 @@ import {Knockout} from "../knockout/knockout.entity";
 
 @Injectable()
 export class TeamService {
-    private readonly logger = new Logger('TeamService', true);
+    private readonly logger = new Logger('TeamService', {timestamp: true});
 
-    constructor(private readonly connection: Connection,
-                @InjectRepository(Team)
+    constructor(@InjectRepository(Team)
                 private readonly repository: Repository<Team>,
                 private standService: StandService) {
     }
 
     async getAll(): Promise<Team[]> {
-        return await this.connection
-            .getRepository(Team)
+        return await this.repository
             .createQueryBuilder('teams')
             .orderBy('name')
             .getMany();
