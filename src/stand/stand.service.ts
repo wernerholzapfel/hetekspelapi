@@ -144,7 +144,6 @@ export class StandService {
             return {
                 displayName: participant.displayName,
                 id: participant.id,
-                teamName: participant.teamName,
                 totalTeamPoints: participant.totaalpunten,
                 totalRankingPoints: 0,
                 totalMatchPoints: matchesStand.length > 0 ? matchesStand.find(m => m.id === participant.id).totalPoints : 0,
