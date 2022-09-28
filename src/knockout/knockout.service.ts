@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {getManager, Repository} from 'typeorm';
+import {DataSource, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Knockout} from "./knockout.entity";
 import {CreateKnockoutDto, UpdateKnockoutDto} from "./create-knockout.dto";
@@ -15,7 +15,8 @@ export class KnockoutService {
                 private readonly KnockoutRepo: Repository<Knockout>,
                                 @InjectRepository(Participant)
                 private readonly participantRepo: Repository<Participant>,
-                private standService: StandService) {
+                private standService: StandService,
+                private dataSource: DataSource) {
     }
 
     async findKnockouts(firebaseIdentifier: string): Promise<any[]> { // todo model aanmaken
@@ -79,92 +80,80 @@ export class KnockoutService {
     }
 
     async update(item: UpdateKnockoutDto): Promise<Knockout> {
-        return await getManager().transaction(async transactionalEntityManager => {
-
-            // opslaan match in database
+        const queryRunner = this.dataSource.createQueryRunner();
+        let knockout;
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
             await this.KnockoutRepo.save(item)
-                .catch((err) => {
-                    throw new HttpException({
-                        message: err.message,
-                        statusCode: HttpStatus.BAD_REQUEST,
-                    }, HttpStatus.BAD_REQUEST);
-                });
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
 
-            const knockout = await this.KnockoutRepo
-                .createQueryBuilder('knockout')
-                .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
-                .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
-                .where('knockout.id = :id', {id: item.id})
-                .getOne();
+        knockout = await queryRunner.manager.getRepository(Knockout)
+            .createQueryBuilder('knockout')
+            .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
+            .where('knockout.id = :id', {id: item.id})
+            .getOne();
 
-            const round = knockout.round != '2' ? (parseInt(knockout.round) / 2).toString() : knockout.round
+        const round = knockout.round != '2' ? (parseInt(knockout.round) / 2).toString() : knockout.round
 
-            const roundIds = await transactionalEntityManager.getRepository(Knockout)
-                .createQueryBuilder('knockout')
-                .select('knockout.id')
-                .where('knockout.round = :round', {round})
-                .getMany()
+        const roundIds = await  queryRunner.manager.getRepository(Knockout)
+            .createQueryBuilder('knockout')
+            .select('knockout.id')
+            .where('knockout.round = :round', {round})
+            .getMany()
 
 
-            if (item.id && knockout.round && item.winnerTeam.id) {
+        if (item.id && knockout.round && item.winnerTeam.id) {
 
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .leftJoin('knockout', 'knockout')
-                        .update(KnockoutPrediction)
-                        .set({
-                            homeSpelpunten: this.standService.getKOPoints(round),
-                        })
-                        .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                        .andWhere('homeTeam.id = :teamId', {teamId: item.winnerTeam.id})
-                        .execute()
-                        .catch((err) => {
-                            throw new HttpException({
-                                message: err.message,
-                                statusCode: HttpStatus.BAD_REQUEST,
-                            }, HttpStatus.BAD_REQUEST);
-                        });
-
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .leftJoin('knockout', 'knockout')
-                        .update(KnockoutPrediction)
-                        .set({
-                            awaySpelpunten: this.standService.getKOPoints(round),
-                        })
-                        .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                        .andWhere('awayTeam.id = :teamId', {teamId: item.winnerTeam.id})
-                        .execute()
-                        .catch((err) => {
-                            throw new HttpException({
-                                message: err.message,
-                                statusCode: HttpStatus.BAD_REQUEST,
-                            }, HttpStatus.BAD_REQUEST);
-                        });
-                if (knockout.round === '2') {
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .leftJoin('knockout', 'knockout')
-                        .update(KnockoutPrediction)
-                        .set({
-                            winnerSpelpunten: 175,
-                        })
-                        .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                        .andWhere('selectedTeam.id = :teamId', {teamId: item.winnerTeam.id})
-                        .execute()
-                        .catch((err) => {
-                            throw new HttpException({
-                                message: err.message,
-                                statusCode: HttpStatus.BAD_REQUEST,
-                            }, HttpStatus.BAD_REQUEST);
-                        });
-                }
-                await transactionalEntityManager
-                    .getRepository(Team)
+                await  queryRunner.manager
                     .createQueryBuilder()
-                    .update(Team)
-                    .set({isEliminated: true, eliminationRound: knockout.round})
-                    .where("id = :teamId", {teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id})
+                    .leftJoin('knockout', 'knockout')
+                    .update(KnockoutPrediction)
+                    .set({
+                        homeSpelpunten: this.standService.getKOPoints(round),
+                    })
+                    .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
+                    .andWhere('homeTeam.id = :teamId', {teamId: item.winnerTeam.id})
+                    .execute()
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+
+                await  queryRunner.manager
+                    .createQueryBuilder()
+                    .leftJoin('knockout', 'knockout')
+                    .update(KnockoutPrediction)
+                    .set({
+                        awaySpelpunten: this.standService.getKOPoints(round),
+                    })
+                    .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
+                    .andWhere('awayTeam.id = :teamId', {teamId: item.winnerTeam.id})
+                    .execute()
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+            if (knockout.round === '2') {
+                await  queryRunner.manager
+                    .createQueryBuilder()
+                    .leftJoin('knockout', 'knockout')
+                    .update(KnockoutPrediction)
+                    .set({
+                        winnerSpelpunten: 175,
+                    })
+                    .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
+                    .andWhere('selectedTeam.id = :teamId', {teamId: item.winnerTeam.id})
                     .execute()
                     .catch((err) => {
                         throw new HttpException({
@@ -173,9 +162,34 @@ export class KnockoutService {
                         }, HttpStatus.BAD_REQUEST);
                     });
             }
+            await  queryRunner.manager.getRepository(Team)
+                .createQueryBuilder()
+                .update(Team)
+                .set({isEliminated: true, eliminationRound: knockout.round})
+                .where("id = :teamId", {teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id})
+                .execute()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        }
+      
+            await queryRunner.commitTransaction();
+        } catch (err) {
+          // since we have errors lets rollback the changes we made
+          await queryRunner.rollbackTransaction();
+        } finally {
+          // you need to release a queryRunner which was manually instantiated
+          await queryRunner.release();
+          return knockout;
+        }
 
-            return knockout
-        })
+
+            // opslaan match in database
+          
+
     }
 
     determineInRound(k: KnockoutPrediction[], prediction: KnockoutPrediction, teamId: string, round: string, homeTeam: boolean): boolean {

@@ -1,5 +1,5 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {getManager, Repository} from 'typeorm';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {DataSource, Repository} from 'typeorm';
 import {Match} from './match.entity';
 import {UpdateMatchDto} from './update-match.dto';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
@@ -8,8 +8,11 @@ import {InjectRepository} from '@nestjs/typeorm';
 @Injectable()
 export class MatchService {
     constructor(@InjectRepository(Match)
-                private readonly matchRepo: Repository<Match>) {
+                private readonly matchRepo: Repository<Match>,
+                private dataSource: DataSource)
+                 {
     }
+    private readonly logger = new Logger('MatchService', {timestamp: true});
 
     async findMatches(): Promise<Match[]> {
         return await this.matchRepo
@@ -69,10 +72,12 @@ export class MatchService {
     }
 
     async update(item: UpdateMatchDto): Promise<Match> {
-        return await getManager().transaction(async transactionalEntityManager => {
-
-            // opslaan match in database
-            const savedMatch = await this.matchRepo.save(item)
+        const queryRunner = this.dataSource.createQueryRunner();
+        let savedMatch
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+            savedMatch = await queryRunner.manager.getRepository(Match).save(item)
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -81,10 +86,10 @@ export class MatchService {
                 });
 
             if (item.id) {
-                const matchPredictions: MatchPrediction[] = await transactionalEntityManager
+                const matchPredictions: MatchPrediction[] = await queryRunner.manager
                     .getRepository(MatchPrediction).createQueryBuilder('matchPrediction')
                     .leftJoinAndSelect('matchPrediction.match', 'match')
-                    .where('match.id = :matchId', {matchId: item.id})
+                    .where('match.id = :matchId', { matchId: item.id })
                     .getMany();
 
                 const updatedMatchPredictions: any[] = [...matchPredictions.map(prediction => {
@@ -95,7 +100,7 @@ export class MatchService {
                 })];
 
 
-                await transactionalEntityManager
+                await queryRunner.manager
                     .getRepository(MatchPrediction)
                     .save(updatedMatchPredictions)
                     .catch((err) => {
@@ -108,8 +113,16 @@ export class MatchService {
 
             }
 
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            this.logger.log(err);
+            // since we have errors lets rollback the changes we made
+            await queryRunner.rollbackTransaction();
+        } finally {
+            // you need to release a queryRunner which was manually instantiated
+            await queryRunner.release();
             return savedMatch
-        })
+        }
     }
 
     determineMatchPoints(matchPrediction: MatchPrediction): number {

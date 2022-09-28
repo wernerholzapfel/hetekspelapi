@@ -1,21 +1,22 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {getManager, Repository} from 'typeorm';
-import {Team} from './team.entity';
-import {CreateTeamDto, UpdateTeamPositionDto} from './create-team.dto';
-import {MatchPrediction} from "../match-prediction/match-prediction.entity";
-import {PoulePrediction} from "../poule-prediction/poule-prediction.entity";
-import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
-import {StandService} from "../stand/stand.service";
-import {Knockout} from "../knockout/knockout.entity";
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { Team } from './team.entity';
+import { CreateTeamDto, UpdateTeamPositionDto } from './create-team.dto';
+import { MatchPrediction } from "../match-prediction/match-prediction.entity";
+import { PoulePrediction } from "../poule-prediction/poule-prediction.entity";
+import { KnockoutPrediction } from "../knockout-prediction/knockout-prediction.entity";
+import { StandService } from "../stand/stand.service";
+import { Knockout } from "../knockout/knockout.entity";
 
 @Injectable()
 export class TeamService {
-    private readonly logger = new Logger('TeamService', {timestamp: true});
+    private readonly logger = new Logger('TeamService', { timestamp: true });
 
     constructor(@InjectRepository(Team)
-                private readonly repository: Repository<Team>,
-                private standService: StandService) {
+    private readonly repository: Repository<Team>,
+        private standService: StandService,
+        private dataSource: DataSource) {
     }
 
     async getAll(): Promise<Team[]> {
@@ -26,15 +27,18 @@ export class TeamService {
     }
 
     async update(teamPositionDto: UpdateTeamPositionDto): Promise<(UpdateTeamPositionDto & Team)> {
-        return await getManager().transaction(async transactionalEntityManager => {
-
-            const roundIds = await transactionalEntityManager.getRepository(Knockout)
+        const queryRunner = this.dataSource.createQueryRunner();
+        // let team
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+            const roundIds = await this.dataSource.manager.getRepository(Knockout)
                 .createQueryBuilder('knockout')
                 .select('knockout.id')
-                .where('knockout.round = :round', {round: '16'})
+                .where('knockout.round = :round', { round: '16' })
                 .getMany()
 
-            const team = await transactionalEntityManager.getRepository(Team)
+            const team = await this.dataSource.manager.getRepository(Team)
                 .save(teamPositionDto)
                 .catch((err) => {
                     throw new HttpException({
@@ -46,14 +50,14 @@ export class TeamService {
 
             if (team.isPositionFinal) {
 
-                await transactionalEntityManager
+                await await this.dataSource.manager
                     .createQueryBuilder()
                     .update(PoulePrediction)
                     .set({
                         spelpunten: 5,
                     })
-                    .where('team.id = :teamId', {teamId: team.id})
-                    .andWhere('positie = :positie', {positie: teamPositionDto.poulePosition})
+                    .where('team.id = :teamId', { teamId: team.id })
+                    .andWhere('positie = :positie', { positie: teamPositionDto.poulePosition })
                     .execute()
                     .catch((err) => {
                         throw new HttpException({
@@ -62,14 +66,14 @@ export class TeamService {
                         }, HttpStatus.BAD_REQUEST);
                     });
 
-                await transactionalEntityManager
+                await await this.dataSource.manager
                     .createQueryBuilder()
                     .update(PoulePrediction)
                     .set({
                         spelpunten: 0,
                     })
-                    .where('team.id = :teamId', {teamId: team.id})
-                    .andWhere('positie != :positie', {positie: teamPositionDto.poulePosition})
+                    .where('team.id = :teamId', { teamId: team.id })
+                    .andWhere('positie != :positie', { positie: teamPositionDto.poulePosition })
                     .execute()
                     .catch((err) => {
                         throw new HttpException({
@@ -79,15 +83,15 @@ export class TeamService {
                     });
             }
 
-            await transactionalEntityManager
+            await await this.dataSource.manager
                 .createQueryBuilder()
                 .leftJoin('knockout', 'knockout')
                 .update(KnockoutPrediction)
                 .set({
                     homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
                 })
-                .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                .andWhere('homeTeam.id = :teamId', {teamId: team.id})
+                .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
+                .andWhere('homeTeam.id = :teamId', { teamId: team.id })
                 .execute()
                 .catch((err) => {
                     throw new HttpException({
@@ -96,15 +100,15 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-            await transactionalEntityManager
+            await await this.dataSource.manager
                 .createQueryBuilder()
                 .leftJoin('knockout', 'knockout')
                 .update(KnockoutPrediction)
                 .set({
                     awaySpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
                 })
-                .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
-                .andWhere('awayTeam.id = :teamId', {teamId: team.id})
+                .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
+                .andWhere('awayTeam.id = :teamId', { teamId: team.id })
                 .execute()
                 .catch((err) => {
                     throw new HttpException({
@@ -113,6 +117,15 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
             return team;
-        })
+
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            this.logger.log(err);
+            // since we have errors lets rollback the changes we made
+            await queryRunner.rollbackTransaction();
+        } finally {
+            // you need to release a queryRunner which was manually instantiated
+            await queryRunner.release();
+        }
     }
 }

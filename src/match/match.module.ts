@@ -3,11 +3,11 @@ import {MatchController} from './match.controller';
 import {MatchService} from './match.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {Match} from './match.entity';
+import { DataSource } from 'typeorm';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Match]),
-        MatchModule],
+        TypeOrmModule.forFeature([Match])],
     controllers: [MatchController],
     providers: [MatchService]
 })

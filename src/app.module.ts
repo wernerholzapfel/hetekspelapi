@@ -1,4 +1,4 @@
-import {CacheInterceptor, CacheModule, MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
+import {CacheInterceptor, CacheModule, Logger, MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
 import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
@@ -82,7 +82,8 @@ import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
     ]
 })
 export class AppModule {
-
+    private readonly logger = new Logger('AppModule', {timestamp: true});
+    
     configure(consumer: MiddlewareConsumer): void {
 
         consumer.apply(IsRegistrationClosed).forRoutes(
@@ -126,5 +127,14 @@ export class AppModule {
             {path: '/stand', method: RequestMethod.POST},
             {path: '/stats/**', method: RequestMethod.POST},
         )
+    
+
+    //   admin.auth().setCustomUserClaims('Klp8krW6qohZTse4hAURW10FrOy1', {admin: true}).then(response => {
+            // this.logger.log('customerset');
+            // this.logger.log(response);
+        // });
+        // admin.auth().updateUser('ENPg7LZlewdswg6vqVd65K4QjQy1', {displayName: 'Tom Dijkerman'}).then(() => {
+        //     this.logger.log('customerset');
+        // });
     }
 }
