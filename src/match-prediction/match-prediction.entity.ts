@@ -20,6 +20,9 @@ export class MatchPrediction {
     @Column({nullable: true})
     spelpunten: number;
 
+    @Column({nullable: true})
+    tableId: number;
+
     @ManyToOne(type => Participant, participant => participant.matchPredictions, {nullable: false})
     participant: Participant;
 

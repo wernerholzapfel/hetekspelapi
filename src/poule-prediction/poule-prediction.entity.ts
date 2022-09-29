@@ -35,6 +35,9 @@ export class PoulePrediction {
     @Column({nullable: true})
     spelpunten: number;
 
+    @Column({nullable: true})
+    tableId: number;
+
     @ManyToOne(type => Team, team => team.poulePredictions, {nullable: false})
     team: Team;
 

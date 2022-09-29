@@ -79,6 +79,8 @@ export class PoulePredictionService {
             ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'D'), true),
             ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'E'), true),
             ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'F'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'G'), true),
+            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'H'), true),
         ]
         return poulesBasedOnMatches
     }

@@ -108,6 +108,12 @@ export class KnockoutService {
             .where('knockout.round = :round', {round})
             .getMany()
 
+            const maxMatchId: any = await queryRunner.manager.getRepository(Knockout)
+            .createQueryBuilder('knockout')
+            .select('knockout.ordering')
+            .where('knockout.homeScore is not NULL')
+            .orderBy('knockout.ordering', "DESC")
+            .getOne()
 
         if (item.id && knockout.round && item.winnerTeam.id) {
 
@@ -117,6 +123,7 @@ export class KnockoutService {
                     .update(KnockoutPrediction)
                     .set({
                         homeSpelpunten: this.standService.getKOPoints(round),
+                        homeTableId: maxMatchId.ordering
                     })
                     .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
                     .andWhere('homeTeam.id = :teamId', {teamId: item.winnerTeam.id})
@@ -134,6 +141,7 @@ export class KnockoutService {
                     .update(KnockoutPrediction)
                     .set({
                         awaySpelpunten: this.standService.getKOPoints(round),
+                        awayTableId: maxMatchId.ordering
                     })
                     .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
                     .andWhere('awayTeam.id = :teamId', {teamId: item.winnerTeam.id})
@@ -151,6 +159,7 @@ export class KnockoutService {
                     .update(KnockoutPrediction)
                     .set({
                         winnerSpelpunten: 175,
+                        winnerTableId: maxMatchId.ordering
                     })
                     .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
                     .andWhere('selectedTeam.id = :teamId', {teamId: item.winnerTeam.id})

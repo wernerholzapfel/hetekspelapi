@@ -8,6 +8,7 @@ import { PoulePrediction } from "../poule-prediction/poule-prediction.entity";
 import { KnockoutPrediction } from "../knockout-prediction/knockout-prediction.entity";
 import { StandService } from "../stand/stand.service";
 import { Knockout } from "../knockout/knockout.entity";
+import { Match } from '../match/match.entity';
 
 @Injectable()
 export class TeamService {
@@ -47,6 +48,21 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
+                let maxMatchId: any = await this.dataSource.manager.getRepository(Knockout)
+                .createQueryBuilder('knockout')
+                .select('knockout.ordering')
+                .where('knockout.homeScore is not NULL')
+                .orderBy('knockout.ordering', "DESC")
+                .getOne()
+    
+            if (!maxMatchId) {
+                maxMatchId = await this.dataSource.manager.getRepository(Match)
+                    .createQueryBuilder('match')
+                    .select('match.ordering')
+                    .where('match.homeScore is not Null')
+                    .orderBy('match.ordering', "DESC")
+                    .getOne()
+            }
 
             if (team.isPositionFinal) {
 
@@ -55,6 +71,7 @@ export class TeamService {
                     .update(PoulePrediction)
                     .set({
                         spelpunten: 5,
+                        tableId: maxMatchId.ordering
                     })
                     .where('team.id = :teamId', { teamId: team.id })
                     .andWhere('positie = :positie', { positie: teamPositionDto.poulePosition })
@@ -71,6 +88,7 @@ export class TeamService {
                     .update(PoulePrediction)
                     .set({
                         spelpunten: 0,
+                        tableId: maxMatchId.ordering
                     })
                     .where('team.id = :teamId', { teamId: team.id })
                     .andWhere('positie != :positie', { positie: teamPositionDto.poulePosition })
@@ -89,6 +107,7 @@ export class TeamService {
                 .update(KnockoutPrediction)
                 .set({
                     homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
+                    homeTableId: maxMatchId.ordering
                 })
                 .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
                 .andWhere('homeTeam.id = :teamId', { teamId: team.id })
@@ -106,6 +125,7 @@ export class TeamService {
                 .update(KnockoutPrediction)
                 .set({
                     awaySpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
+                    awayTableId: maxMatchId.ordering
                 })
                 .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
                 .andWhere('awayTeam.id = :teamId', { teamId: team.id })

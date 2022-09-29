@@ -35,6 +35,15 @@ export class KnockoutPrediction {
 
     @Column({nullable: true})
     winnerSpelpunten: number;
+    
+    @Column({nullable: true})
+    homeTableId: number;
+
+    @Column({nullable: true})
+    awayTableId: number;
+
+    @Column({nullable: true})
+    winnerTableId: number;
 
     @ManyToOne(type => Participant, participant => participant.knockoutPredictions, {nullable: false})
     participant: Participant;

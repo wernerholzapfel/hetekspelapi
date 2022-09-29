@@ -1,9 +1,10 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {DataSource, Repository} from 'typeorm';
+import {DataSource, Repository, UpdateResult} from 'typeorm';
 import {Match} from './match.entity';
 import {UpdateMatchDto} from './update-match.dto';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {InjectRepository} from '@nestjs/typeorm';
+import { match } from 'assert';
 
 @Injectable()
 export class MatchService {
@@ -73,11 +74,17 @@ export class MatchService {
 
     async update(item: UpdateMatchDto): Promise<Match> {
         const queryRunner = this.dataSource.createQueryRunner();
-        let savedMatch
+        let savedMatch;
         await queryRunner.connect();
         await queryRunner.startTransaction();
         try {
-            savedMatch = await queryRunner.manager.getRepository(Match).save(item)
+            savedMatch = await queryRunner.manager.getRepository(Match)
+            .createQueryBuilder('match')
+                .update()
+                .set(item)
+                .where('match.id = :matchId', { matchId: item.id })
+                .returning('*')
+                .execute()
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
@@ -96,6 +103,7 @@ export class MatchService {
                     return {
                         ...prediction,
                         spelpunten: this.determineMatchPoints(prediction),
+                        tableId: savedMatch.raw[0].ordering
                     }
                 })];
 
