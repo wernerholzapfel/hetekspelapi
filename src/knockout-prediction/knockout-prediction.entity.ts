@@ -1,10 +1,11 @@
-import {Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
+import {Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn} from 'typeorm';
 import {Participant} from '../participant/participant.entity';
 import {Knockout} from "../knockout/knockout.entity";
 import {Team} from "../team/team.entity";
 
 @Entity()
 @Index(['participant', 'knockout'], {unique: true})
+@Unique(['participant', 'selectedTeam', 'round'])
 export class KnockoutPrediction {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -44,6 +45,9 @@ export class KnockoutPrediction {
 
     @Column({nullable: true})
     winnerTableId: number;
+    
+    @Column({nullable: true})
+    round: string;
 
     @ManyToOne(type => Participant, participant => participant.knockoutPredictions, {nullable: false})
     participant: Participant;

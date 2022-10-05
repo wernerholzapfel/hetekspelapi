@@ -9,4 +9,5 @@ export class CreateKnockoutPredictionDto {
     @IsDefined() awayTeam: Team;
     @IsDefined() homeTeam: Team;
     @IsDefined() knockout: Knockout;
+    @IsDefined() round: string;
 }

@@ -100,7 +100,7 @@ export class KnockoutService {
             .where('knockout.id = :id', {id: item.id})
             .getOne();
 
-        const round = knockout.round != '2' ? (parseInt(knockout.round) / 2).toString() : knockout.round
+        const round = knockout.round != '2' && knockout.round != '3' ? (parseInt(knockout.round) / 2).toString() : knockout.round
 
         const roundIds = await  queryRunner.manager.getRepository(Knockout)
             .createQueryBuilder('knockout')
@@ -152,13 +152,13 @@ export class KnockoutService {
                             statusCode: HttpStatus.BAD_REQUEST,
                         }, HttpStatus.BAD_REQUEST);
                     });
-            if (knockout.round === '2') {
+            if (knockout.round === '2' || knockout.round === '3') {
                 await  queryRunner.manager
                     .createQueryBuilder()
                     .leftJoin('knockout', 'knockout')
                     .update(KnockoutPrediction)
                     .set({
-                        winnerSpelpunten: 175,
+                        winnerSpelpunten: knockout.round === '2' ? 175 : 60,
                         winnerTableId: maxMatchId.ordering
                     })
                     .where('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})

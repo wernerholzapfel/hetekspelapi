@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {Brackets, DeleteResult, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Participant} from '../participant/participant.entity';
@@ -18,7 +18,6 @@ export class KnockoutPredictionService {
                 private readonly teamRepo: Repository<Team>) {
 
     }
-
     async findKnockoutForParticipant(participantId: string): Promise<KnockoutPrediction[]> {
         return await this.knockoutPredictionRepository
         .createQueryBuilder('knockoutPrediction')
@@ -128,15 +127,15 @@ export class KnockoutPredictionService {
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
             .getOne();
-
         const updatedMatch = await this.knockoutPredictionRepository.save(
             {
                 ...item,
+                round: item.round,
                 participant
             })
             .catch((err) => {
                 throw new HttpException({
-                    message: err.message,
+                    message: err.code === '23505' ? `Je hebt ${item.selectedTeam.id === item.homeTeam.id ? item.homeTeam.name : item.awayTeam.name} al in de volgende ronde, pas eerst de andere open wedstrijden aan, of kies hier een ander land` : err.message,
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
