@@ -174,7 +174,7 @@ export class KnockoutService {
             await  queryRunner.manager.getRepository(Team)
                 .createQueryBuilder()
                 .update(Team)
-                .set({isEliminated: true, eliminationRound: knockout.round})
+                .set({isEliminated: knockout.round === '4' ? false : true, eliminationRound: knockout.round})
                 .where("id = :teamId", {teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id})
                 .execute()
                 .catch((err) => {

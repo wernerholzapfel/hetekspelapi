@@ -40,7 +40,11 @@ export class TeamService {
                 .getMany()
 
             const team = await this.dataSource.manager.getRepository(Team)
-                .save(teamPositionDto)
+                .save({
+                    ...teamPositionDto,
+                    eliminationRound: teamPositionDto.isEliminated ? 
+                        teamPositionDto.eliminationRound : null
+                })
                 .catch((err) => {
                     throw new HttpException({
                         message: err.message,
