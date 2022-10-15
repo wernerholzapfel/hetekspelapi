@@ -32,8 +32,41 @@ export class StandService {
         this.logger.log('getSortedPositionStand');
         this.logger.log(sortedStand);
         let previousPosition = 1;
+        let deltaPreviousPosition = 1
 
-        const sortedMatchStand = sortedStand
+        const sortedPreviousMatchStand = sortedStand
+        .sort((a, b) => {
+            if (b.matchPoints - b.deltaMatchPoints > a.matchPoints - a.deltaMatchPoints) {
+                return 1
+            }
+            if (b.matchPoints - b.deltaMatchPoints < a.matchPoints - a.deltaMatchPoints) {
+                return -1
+            }
+            if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                return -1;
+            }
+            if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                return 1;
+            }
+            return 0;
+        });
+
+        const positionSortedPreviousMatchStand = sortedPreviousMatchStand.map((participant, index) => {
+            if (index > 0 && participant && participant.matchPoints === sortedPreviousMatchStand[index - 1].matchPoints) {
+                return {
+                    ...participant,
+                    previousMatchPosition: previousPosition,
+                };
+            } else {
+                previousPosition = index + 1;
+                return {
+                    ...participant,
+                    previousMatchPosition: index + 1,
+                };
+            }
+        })
+
+        const sortedMatchStand = positionSortedPreviousMatchStand
             .sort((a, b) => {
                 if (b.matchPoints > a.matchPoints) {
                     return 1
@@ -66,8 +99,42 @@ export class StandService {
         })
 
         previousPosition = 1;
+        deltaPreviousPosition = 1
 
-        const sortedtotaalStand = positionSortedMatchStand
+        const sortedPreviousTotalStand = positionSortedMatchStand
+        .sort((a, b) => {
+            if (b.totalPoints - b.deltaTotalPoints > a.totalPoints - a.deltaTotalPoints) {
+                return 1
+            }
+            if (b.totalPoints - b.deltaTotalPoints < a.TotalPoints - a.deltaTotalPoints) {
+                return -1
+            }
+            if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
+                return -1;
+            }
+            if (a.displayName.toLowerCase() > b.displayName.toLowerCase()) {
+                return 1;
+            }
+            return 0;
+        });
+
+
+        const positionSortedPreviousTotalStand = sortedPreviousTotalStand.map((participant, index) => {
+            if (index > 0 && participant && participant.matchPoints === sortedPreviousTotalStand[index - 1].matchPoints) {
+                return {
+                    ...participant,
+                    previousPosition: previousPosition,
+                };
+            } else {
+                previousPosition = index + 1;
+                return {
+                    ...participant,
+                    previousPosition: index + 1,
+                };
+            }
+        })
+
+        const sortedtotaalStand = positionSortedPreviousTotalStand
             .sort((a, b) => {
                 if (b.totalPoints > a.totalPoints) {
                     return 1
@@ -208,7 +275,7 @@ export class StandService {
                     .groupBy('"participantId"');
             }, 'matchPoints')
              .addSelect((subQuery) => {
-                return subQuery.select('SUM(COALESCE("spelpunten",0))', 'deltamatchPoints')
+                return subQuery.select('SUM(COALESCE("spelpunten",0))', 'deltaMatchPoints')
                     .from(MatchPrediction, 'mp')
                     .where('mp."participantId" = "participant".id')
                     .andWhere('mp.tableId > :previousTableId', {previousTableId: hetEkspel.currentTable})
@@ -222,7 +289,7 @@ export class StandService {
                     .groupBy('"participantId"');
             }, 'poulePoints')
               .addSelect((subQuery) => {
-                return subQuery.select('SUM(COALESCE("spelpunten",0))', 'deltapoulePoints')
+                return subQuery.select('SUM(COALESCE("spelpunten",0))', 'deltaPoulePoints')
                     .from(PoulePrediction, 'dpp')
                     .where('dpp."participantId" = "participant".id')
                     .andWhere('dpp.tableId > :previousTableId', {previousTableId: hetEkspel.currentTable})
@@ -273,12 +340,12 @@ export class StandService {
                 matchPoints: p.matchPoints ? parseInt(p.matchPoints, 10) :0 ,
                 knockoutPoints: p.knockoutPoints ? parseInt(p.knockoutPoints, 10):0,
                 poulePoints: p.poulePoints ? parseInt(p.poulePoints, 10):0,
-                deltamatchPoints: p.deltamatchPoints ? parseInt(p.deltamatchPoints, 10):0,
-                deltaknockoutPoints: 
+                deltaMatchPoints: p.deltaMatchPoints ? parseInt(p.deltaMatchPoints, 10):0,
+                deltaKnockoutPoints: 
                     p.deltaHomeKnockoutPoints ? parseInt(p.deltaHomeKnockoutPoints, 10) : 0 +
                     p.deltaAwayKnockoutPoints ? parseInt(p.deltaAwayKnockoutPoints, 10) : 0 +
                     p.deltaWinnerKnockoutPoints ? parseInt(p.deltaWinnerKnockoutPoints, 10) : 0,
-                deltapoulePoints: p.deltapoulePoints ? parseInt(p.deltapoulePoints, 10):0,
+                deltaPoulePoints: p.deltaPoulePoints ? parseInt(p.deltaPoulePoints, 10):0,
             }
         }).map(pp => {
             return { 
