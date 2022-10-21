@@ -281,7 +281,7 @@ export class StandService {
                     .andWhere('mp.tableId > :previousTableId', {previousTableId: hetEkspel.currentTable})
                     .andWhere('mp.tableId <= :newTableId', {newTableId: maxMatchId.ordering})
                     .groupBy('"participantId"');
-            }, 'deltamatchPoints')
+            }, 'deltaMatchPoints')
              .addSelect((subQuery) => {
                 return subQuery.select('SUM(COALESCE("spelpunten",0))', 'poulePoints')
                     .from(PoulePrediction, 'pp')
@@ -295,7 +295,7 @@ export class StandService {
                     .andWhere('dpp.tableId > :previousTableId', {previousTableId: hetEkspel.currentTable})
                     .andWhere('dpp.tableId <= :newTableId', {newTableId: maxMatchId.ordering})
                     .groupBy('"participantId"');
-            }, 'deltapoulePoints')
+            }, 'deltaPoulePoints')
             .addSelect((subQuery) => {
                 return subQuery.select('COALESCE(SUM(COALESCE("homeSpelpunten",0) + COALESCE("awaySpelpunten",0) + COALESCE("winnerSpelpunten",0)),0)', 'knockoutPoints')
                     .from(KnockoutPrediction, 'kp')
