@@ -43,7 +43,7 @@ export class KnockoutPredictionService {
             .where('team.id = :teamId', {teamId})
             .getOne()
 
-        if (roundId === '1') {
+        if (roundId === '1' || roundId === '3') {
             const kos = await this.knockoutPredictionRepository 
                 .createQueryBuilder('knockoutPrediction')
                 .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
@@ -90,7 +90,7 @@ export class KnockoutPredictionService {
                     name: team.name,
                     isInRound: parseInt(team.eliminationRound) <= parseInt(roundId),
                     isEliminated: team.isEliminated,
-                    points: parseInt(team.eliminationRound) <= parseInt(roundId) || !team.isEliminated ? this.getPointsForKnockout(roundId) : 0
+                    points: parseInt(team.eliminationRound) <= parseInt(roundId) ? this.getPointsForKnockout(roundId) : 0
                 },
                 participants: kos.map(ko => {
                     return {
