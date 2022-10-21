@@ -103,10 +103,10 @@ export class StandService {
 
         const sortedPreviousTotalStand = positionSortedMatchStand
         .sort((a, b) => {
-            if (b.totalPoints - b.deltaTotalPoints > a.totalPoints - a.deltaTotalPoints) {
+            if (b.totalPoints - b.deltaMatchPoints - b.deltaPoulePoints - b.deltaKnockoutPoints > a.totalPoints - a.deltaMatchPoints - a.deltaPoulePoints - a.deltaKnockoutPoints) {
                 return 1
             }
-            if (b.totalPoints - b.deltaTotalPoints < a.TotalPoints - a.deltaTotalPoints) {
+            if (b.totalPoints - b.deltaMatchPoints - b.deltaPoulePoints - b.deltaKnockoutPoints < a.totalPoints - a.deltaMatchPoints - a.deltaPoulePoints - a.deltaKnockoutPoints) {
                 return -1
             }
             if (a.displayName.toLowerCase() < b.displayName.toLowerCase()) {
