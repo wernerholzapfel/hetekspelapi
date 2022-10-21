@@ -5,6 +5,7 @@ import {UpdateMatchDto} from './update-match.dto';
 import {MatchPrediction} from '../match-prediction/match-prediction.entity';
 import {InjectRepository} from '@nestjs/typeorm';
 import { match } from 'assert';
+import e = require('express');
 
 @Injectable()
 export class MatchService {
@@ -148,8 +149,13 @@ export class MatchService {
         if (matchPrediction.homeScore - matchPrediction.awayScore === matchPrediction.match.homeScore - matchPrediction.match.awayScore
             || (matchPrediction.homeScore > matchPrediction.awayScore && matchPrediction.match.homeScore > matchPrediction.match.awayScore)
             || (matchPrediction.homeScore < matchPrediction.awayScore && matchPrediction.match.homeScore < matchPrediction.match.awayScore)) {
-            // toto goed + score goed
-            return 20
+            if (matchPrediction.homeScore === matchPrediction.match.homeScore || matchPrediction.awayScore === matchPrediction.match.awayScore) {
+                // toto goed + score goed
+                return 25;
+            } else {
+                return 20
+
+            }
         }
         // doelpunten maker goed
         if (matchPrediction.homeScore === matchPrediction.match.homeScore || matchPrediction.awayScore === matchPrediction.match.awayScore) {
