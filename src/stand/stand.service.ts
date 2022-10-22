@@ -31,8 +31,10 @@ export class StandService {
     private getSortedPositionStand(sortedStand) {
         this.logger.log('getSortedPositionStand');
         this.logger.log(sortedStand);
-        let previousPosition = 1;
-        let deltaPreviousPosition = 1
+        let previousMatchPosition = 1;
+        let matchPosition = 1
+        let previousTotalPosition = 1;
+        let totalPosition = 1
 
         const sortedPreviousMatchStand = sortedStand
         .sort((a, b) => {
@@ -52,13 +54,13 @@ export class StandService {
         });
 
         const positionSortedPreviousMatchStand = sortedPreviousMatchStand.map((participant, index) => {
-            if (index > 0 && participant && participant.matchPoints === sortedPreviousMatchStand[index - 1].matchPoints) {
+            if (index > 0 && participant && participant.matchPoints - participant.deltaMatchPoints === sortedPreviousMatchStand[index - 1].matchPoints - sortedPreviousMatchStand[index - 1].deltaMatchPoints) {
                 return {
                     ...participant,
-                    previousMatchPosition: previousPosition,
+                    previousMatchPosition,
                 };
             } else {
-                previousPosition = index + 1;
+                previousMatchPosition = index + 1;
                 return {
                     ...participant,
                     previousMatchPosition: index + 1,
@@ -83,23 +85,21 @@ export class StandService {
                 return 0;
             });
 
+
         const positionSortedMatchStand = sortedMatchStand.map((participant, index) => {
             if (index > 0 && participant && participant.matchPoints === sortedMatchStand[index - 1].matchPoints) {
                 return {
                     ...participant,
-                    matchPosition: previousPosition,
+                    matchPosition: matchPosition,
                 };
             } else {
-                previousPosition = index + 1;
+                matchPosition = index + 1;
                 return {
                     ...participant,
                     matchPosition: index + 1,
                 };
             }
         })
-
-        previousPosition = 1;
-        deltaPreviousPosition = 1
 
         const sortedPreviousTotalStand = positionSortedMatchStand
         .sort((a, b) => {
@@ -120,13 +120,14 @@ export class StandService {
 
 
         const positionSortedPreviousTotalStand = sortedPreviousTotalStand.map((participant, index) => {
-            if (index > 0 && participant && participant.matchPoints === sortedPreviousTotalStand[index - 1].matchPoints) {
+            if (index > 0 && participant && participant.totalPoints - participant.deltaMatchPoints - participant.deltaPoulePoints - participant.deltaKnockoutPoints  
+                 === sortedPreviousTotalStand[index - 1].totalPoints - sortedPreviousTotalStand[index - 1].deltaMatchPoints - sortedPreviousTotalStand[index - 1].deltaPoulePoints - sortedPreviousTotalStand[index - 1].deltaKnockoutPoints ) {
                 return {
                     ...participant,
-                    previousPosition: previousPosition,
+                    previousPosition: previousTotalPosition,
                 };
             } else {
-                previousPosition = index + 1;
+                previousTotalPosition = index + 1;
                 return {
                     ...participant,
                     previousPosition: index + 1,
@@ -155,10 +156,10 @@ export class StandService {
             if (index > 0 && participant && participant.totalPoints === sortedtotaalStand[index - 1].totalPoints) {
                 return {
                     ...participant,
-                    position: previousPosition,
+                    position: totalPosition,
                 };
             } else {
-                previousPosition = index + 1;
+                totalPosition = index + 1;
                 return {
                     ...participant,
                     position: index + 1,
@@ -184,59 +185,6 @@ export class StandService {
         return sortedPositionStand;
     }
 
-    async getTotalStandFromFirebase(): Promise<any> {
-        this.logger.log('getTotalStandFB start');
-        let totalstand = [];
-        let questionStand = [];
-        let matchesStand = [];
-        let teamStand = [];
-
-        const db = admin.database();
-
-        const teamRef = db.ref('dd0c5fa2-9202-40e9-9505-ff8a3dbb6429/a855cf19-195f-484e-88cc-c9dbc744ae98/Team/totaal'); // todo
-        await teamRef.once('value', async teamTotaal => {
-            this.logger.log('teamTotaal: ' + teamTotaal.val().length);
-            this.logger.log('fb console');
-            teamStand = teamTotaal.val();
-        });
-        const matchesRef = db.ref('matches/totaal'); // todo
-        await matchesRef.once('value', async (matches) => {
-            this.logger.log('matches: ' + matches.val().length);
-            matchesStand = matches.val();
-        });
-
-        const questionRef = db.ref('dd0c5fa2-9202-40e9-9505-ff8a3dbb6429/2d6b5514-5375-4800-ae87-9072d1644dfa/Questions/totaal'); // todo
-        await questionRef.once('value', async question => {
-            this.logger.log('question: ' + question.val().length);
-
-            questionStand = question.val();
-        });
-
-        totalstand = teamStand.map(participant => {
-            return {
-                displayName: participant.displayName,
-                id: participant.id,
-                totalTeamPoints: participant.totaalpunten,
-                totalRankingPoints: 0,
-                totalMatchPoints: matchesStand.length > 0 ? matchesStand.find(m => m.id === participant.id).totalPoints : 0,
-                totalQuestionPoints: questionStand.length > 0 ? questionStand.find(q => q.id === participant.id).totalPoints : 0,
-            };
-        })
-            .map(participant => {
-                return {
-                    ...participant,
-                    totalPoints: participant.totalMatchPoints
-                        + participant.totalTeamPoints
-                        + participant.totalRankingPoints
-                        + participant.totalQuestionPoints,
-                };
-            })
-            .sort((a, b) => {
-                return b.totalPoints - a.totalPoints;
-            });
-        return this.getSortedPositionStand(totalstand);
-    }
-
     async getTotalStand(): Promise<any[]> {
         // haal op wat de vorige standnummer was en bepaal wat nieuwe stand nummer wordt
         // indien vorige gelijk is aan huidige, overschrijven.
@@ -244,7 +192,7 @@ export class StandService {
         // we slaan dan twee standen op (voor snelheid?) current en previous? of 1 stand en berekenen alles hier...
 
         const db = admin.database();
-        const hetEkspel: Hetekspel = await this.hetEKSPELRepo.findOneBy({});
+        let hetEkspel: Hetekspel = await this.hetEKSPELRepo.findOneBy({});
 
         let maxMatchId: any = await this.KnockoutRepo
             .createQueryBuilder('knockout')
@@ -264,6 +212,9 @@ export class StandService {
         if (!maxMatchId) {
             maxMatchId = { ordering: 0 }
         }
+
+        this.logger.log(maxMatchId.ordering);
+        hetEkspel = {...hetEkspel, currentTable: 5}
 
         const participants: any = await this.ParticipantRepo
             .createQueryBuilder('participant')
