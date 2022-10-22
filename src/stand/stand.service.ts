@@ -213,9 +213,6 @@ export class StandService {
             maxMatchId = { ordering: 0 }
         }
 
-        this.logger.log(maxMatchId.ordering);
-        hetEkspel = {...hetEkspel, currentTable: 5}
-
         const participants: any = await this.ParticipantRepo
             .createQueryBuilder('participant')
             .select(['participant.displayName', 'participant.id'])
@@ -304,27 +301,6 @@ export class StandService {
             totalPoints: pp.matchPoints + pp.poulePoints + pp.knockoutPoints
         }
         }));
-        // let currentTable = this.getSortedPositionStand(await this.createStandTillMatchId(participantsMerged, maxMatchId.ordering))
-
-        // if (previousTable && previousTable.length > 0) {
-            // currentTable = currentTable.map(t => {
-        //         this.logger.log(previousTable.find(pt => pt.id === t.id).displayName)
-        //         this.logger.log(previousTable.find(pt => pt.id === t.id).matchPosition)
-        //         this.logger.log(t.matchPosition)
-        //         return {
-        //             ...t,
-        //             deltaPosition: previousTable.find(pt => pt.id === t.id).position - t.position,
-        //             deltaMatchPosition: previousTable.find(pt => pt.id === t.id).matchPosition - t.matchPosition,
-        //             deltatotalPoints: t.totalPoints - previousTable.find(pt => pt.id === t.id).totalPoints,
-        //             deltePoulePoints: t.poulePoints - previousTable.find(pt => pt.id === t.id).poulePoints,
-        //             deltaKnockoutPoints: t.knockoutPoints - previousTable.find(pt => pt.id === t.id).knockoutPoints,
-        //             deltaMatchPoints: t.matchPoints - previousTable.find(pt => pt.id === t.id).matchPoints
-        //         }
-        //     })
-        // // }
-
-        // const docRef = db.ref(`${maxMatchId.ordering}`);
-        // docRef.set(currentTable);
 
         await this.hetEKSPELRepo
             .save({ ...hetEkspel, currentTable: maxMatchId.ordering })
