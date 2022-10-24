@@ -33,4 +33,9 @@ export class ParticipantController {
     async addPushtoken(@Req() req, @Body() addPushTokenDto: AddPushTokenDto) {
         return await this.participantsService.addPushToken(addPushTokenDto, req.user.uid);
     }
+
+     @Put('displayname')
+    async updateDisplayName(@Req() req, @Body() body: {id: string, displayName: string}) {
+        return await this.participantsService.updateDisplayName(body, req.user.uid);
+    }
 }

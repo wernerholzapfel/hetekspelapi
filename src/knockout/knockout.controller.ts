@@ -17,6 +17,11 @@ export class KnockoutController {
     async knockoutsResults(@Req() req): Promise<Knockout[]> {
         return this.service.getKnockoutResults();
     }
+    
+    @Get('rightpredicted')
+    async knockoutsRightPredicted(@Req() req): Promise<Knockout[]> {
+        return this.service.getKnockoutsRightPredicted();
+    }
 
     @Post()
     async create(@Req() req, @Body() createKnockoutDto: CreateKnockoutDto[]) {

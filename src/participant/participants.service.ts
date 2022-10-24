@@ -82,4 +82,32 @@ export class ParticipantsService {
         }
 
     }
+    
+    async updateDisplayName(body: {id: string, displayName: string}, firebaseIdentifier: string): Promise<any> {
+        const participant = await this.participantRepo
+            .createQueryBuilder('participant')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .andWhere('participant.id = :id', {id: body.id})
+            .getOne();
+
+        if (participant) {
+            return await this.participantRepo
+                .createQueryBuilder('participant')
+                .update(Participant)
+                .set({ displayName: body.displayName })
+                .andWhere('participant.id = :id', { id: body.id })
+                .execute()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        } else {
+            throw new HttpException({
+                message: 'We konden je niet correct identificeren, log opnieuw in',
+                statusCode: HttpStatus.FORBIDDEN,
+            }, HttpStatus.FORBIDDEN);
+        }
+    }
 }

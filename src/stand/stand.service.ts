@@ -193,7 +193,6 @@ export class StandService {
 
         const db = admin.database();
         let hetEkspel: Hetekspel = await this.hetEKSPELRepo.findOneBy({});
-
         let maxMatchId: any = await this.KnockoutRepo
             .createQueryBuilder('knockout')
             .select('knockout.ordering')

@@ -7,10 +7,11 @@ import {StandService} from "../stand/stand.service";
 import { Hetekspel } from '../hetekspel/hetekspel.entity';
 import { Participant } from '../participant/participant.entity';
 import { Match } from '../match/match.entity';
+import { KnockoutPrediction } from '../knockout-prediction/knockout-prediction.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Knockout, Hetekspel, Participant, Match])],
+        TypeOrmModule.forFeature([Knockout, KnockoutPrediction, Hetekspel, Participant, Match])],
     controllers: [KnockoutController],
     providers: [KnockoutService, StandService]
 })
