@@ -169,6 +169,20 @@ export class KnockoutService {
                                 statusCode: HttpStatus.BAD_REQUEST,
                             }, HttpStatus.BAD_REQUEST);
                         });
+                        
+                        // set winner of finales to eliminated false and knockoutround after roundId but before next roundId...
+                        await queryRunner.manager.getRepository(Team)
+                        .createQueryBuilder()
+                        .update(Team)
+                        .set({ isEliminated: false, eliminationRound: knockout.round === '2' ? '1' : '2,5' })
+                        .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.homeTeam.id : item.awayTeam.id })
+                        .execute()
+                        .catch((err) => {
+                            throw new HttpException({
+                                message: err.message,
+                                statusCode: HttpStatus.BAD_REQUEST,
+                            }, HttpStatus.BAD_REQUEST);
+                        });
                 } else {
                     await queryRunner.manager
                         .createQueryBuilder()
