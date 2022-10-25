@@ -117,6 +117,14 @@ export class StatsService {
                     }
                 }).sort((a, b) => b.count - a.count)
             }, {
+                round: '3',
+                teams: teams.map(team => {
+                    return {
+                        ...team,
+                        count: this.getNumberOfSelectedForRound(knockoutPredictions, team, '3')
+                    }
+                }).sort((a, b) => b.count - a.count)
+            }, {
                 round: '2',
                 teams: teams.map(team => {
                     return {

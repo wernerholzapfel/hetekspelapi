@@ -52,7 +52,7 @@ export class KnockoutPredictionService {
                 .leftJoinAndSelect('knockoutPrediction.selectedTeam', 'selectedTeam')
                 .leftJoinAndSelect('knockoutPrediction.awayTeam', 'awayTeam')
                 .leftJoinAndSelect('knockoutPrediction.knockout', 'knockout')
-                .where('knockout.round = :roundId', {roundId: '2'})
+                .where('knockout.round = :roundId', {roundId: roundId === '3' ? '3' : '2'})
                 .andWhere('selectedTeam.id = :teamId', {teamId})
                 .getMany();
 
@@ -175,6 +175,8 @@ export class KnockoutPredictionService {
             case '8':
                 return 35
             case '4':
+                return 60
+            case '3':
                 return 60
             case '2':
                 return 100
