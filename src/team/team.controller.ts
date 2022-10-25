@@ -14,6 +14,11 @@ export class TeamController {
     async findAll(): Promise<Team[]> {
         return this.service.getAll();
     }
+    
+    @Get('latestActive')
+    async getStillActiveTeams(): Promise<Team[]> {
+        return this.service.getStillActiveTeams();
+    }
 
     @Put()
     async update(@Req() req, @Body() UpdateTeamPositionDto: UpdateTeamPositionDto) {

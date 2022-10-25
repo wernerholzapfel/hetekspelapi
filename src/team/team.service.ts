@@ -2,8 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Team } from './team.entity';
-import { CreateTeamDto, UpdateTeamPositionDto } from './create-team.dto';
-import { MatchPrediction } from "../match-prediction/match-prediction.entity";
+import { UpdateTeamPositionDto } from './create-team.dto';
 import { PoulePrediction } from "../poule-prediction/poule-prediction.entity";
 import { KnockoutPrediction } from "../knockout-prediction/knockout-prediction.entity";
 import { StandService } from "../stand/stand.service";
@@ -16,6 +15,8 @@ export class TeamService {
 
     constructor(@InjectRepository(Team)
     private readonly repository: Repository<Team>,
+    @InjectRepository(Knockout)
+    private readonly knockoutRepo: Repository<Knockout>,
         private standService: StandService,
         private dataSource: DataSource) {
     }
@@ -25,6 +26,41 @@ export class TeamService {
             .createQueryBuilder('teams')
             .orderBy('name')
             .getMany();
+    }
+    
+    async getStillActiveTeams(): Promise<Team[]> {
+
+        let listOfTeamInRound = []
+        let poule = []
+        const ko = await this.knockoutRepo
+            .createQueryBuilder('knockout')
+            .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
+            .addOrderBy('knockout.date', 'DESC')
+            .limit(3)
+            .getMany();
+
+        if (ko.length < 3) {
+            poule = await this.repository
+            .createQueryBuilder('teams')
+            .where('teams.poulePosition in (1,2)')
+            .addOrderBy('teams.updatedDate', 'DESC')
+            .limit(3 - ko.length)
+            .getMany();
+        }
+
+        listOfTeamInRound = [
+            ...ko.map(k => {
+                return {
+                    team: k.winnerTeam,
+                    round: k.round !== "3" ?  (parseInt(k.round) / 2).toString(): "3"
+                }
+            }), ...poule.map(p => {
+                return {
+                    team: p,
+                    round: '16'
+                }
+            })]
+        return listOfTeamInRound
     }
 
     async update(teamPositionDto: UpdateTeamPositionDto): Promise<(UpdateTeamPositionDto & Team)> {
