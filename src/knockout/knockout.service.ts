@@ -176,7 +176,7 @@ export class KnockoutService {
                         .update(Team)
                         .set({ isEliminated: false, 
                             eliminationRound: knockout.round === '2' ? '1' : '2,5', 
-                            latestActiveRound: knockout.round })
+                            latestActiveRound: knockout.round === '2' ? '1' : '2,5' })
                         .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.homeTeam.id : item.awayTeam.id })
                         .execute()
                         .catch((err) => {
