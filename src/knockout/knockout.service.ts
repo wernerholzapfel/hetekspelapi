@@ -169,12 +169,14 @@ export class KnockoutService {
                                 statusCode: HttpStatus.BAD_REQUEST,
                             }, HttpStatus.BAD_REQUEST);
                         });
-                        
-                        // set winner of finales to eliminated false and knockoutround after roundId but before next roundId...
-                        await queryRunner.manager.getRepository(Team)
+
+                    // update winnerteam set winner of finales to eliminated false and knockoutround after roundId but before next roundId...
+                    await queryRunner.manager.getRepository(Team)
                         .createQueryBuilder()
                         .update(Team)
-                        .set({ isEliminated: false, eliminationRound: knockout.round === '2' ? '1' : '2,5' })
+                        .set({ isEliminated: false, 
+                            eliminationRound: knockout.round === '2' ? '1' : '2,5', 
+                            latestActiveRound: knockout.round })
                         .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.homeTeam.id : item.awayTeam.id })
                         .execute()
                         .catch((err) => {
@@ -219,9 +221,22 @@ export class KnockoutService {
                                 statusCode: HttpStatus.BAD_REQUEST,
                             }, HttpStatus.BAD_REQUEST);
                         });
+                    // update winner team
+                    await queryRunner.manager.getRepository(Team)
+                        .createQueryBuilder()
+                        .update(Team)
+                        .set({ latestActiveRound: this.getNextActiveRound(knockout.round) })
+                        .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.homeTeam.id : item.awayTeam.id })
+                        .execute()
+                        .catch((err) => {
+                            throw new HttpException({
+                                message: err.message,
+                                statusCode: HttpStatus.BAD_REQUEST,
+                            }, HttpStatus.BAD_REQUEST);
+                        });
 
                 }
-
+                // update loser team
                 await queryRunner.manager.getRepository(Team)
                     .createQueryBuilder()
                     .update(Team)
@@ -255,6 +270,21 @@ export class KnockoutService {
     determineInRound(k: KnockoutPrediction[], prediction: KnockoutPrediction, teamId: string, round: string, homeTeam: boolean): boolean {
         return !!k.find(k => k.knockout.round === round && (k.awayTeam.id === teamId || k.homeTeam.id === teamId)) ? true : homeTeam ? prediction.homeInRound : prediction.awayInRound;
     }
-
+    getNextActiveRound(roundId: string) {
+        switch (roundId) {
+            case '16':
+                return '8'
+            case '8':
+                return '4'
+            case '4':
+                return '2'
+            case '3':
+                return '2,5'
+            case '2':
+                return '1'
+            default:
+                return null
+        }
+    }
 
 }

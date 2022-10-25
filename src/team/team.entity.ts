@@ -23,6 +23,9 @@ export class Team {
 
     @Column('text', {nullable: true})
     eliminationRound: string
+    
+    @Column('text', {default: '32', nullable: false})
+    latestActiveRound: string
 
     @OneToMany(type => Match, match => match.homeTeam)
     matches: Match[];

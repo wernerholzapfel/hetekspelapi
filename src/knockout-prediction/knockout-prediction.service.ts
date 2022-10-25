@@ -10,6 +10,8 @@ import {Team} from "../team/team.entity";
 @Injectable()
 export class KnockoutPredictionService {
 
+    private readonly logger = new Logger('KnockoutPredictionService', {timestamp: true});
+
     constructor(@InjectRepository(KnockoutPrediction)
                 private readonly knockoutPredictionRepository: Repository<KnockoutPrediction>,
                 @InjectRepository(Participant)
@@ -82,15 +84,16 @@ export class KnockoutPredictionService {
                         .orWhere('awayTeam.id = :teamId', {teamId})
                 }))
                 .getMany();
+
             return {
                 round: roundId,
                 team: {
                     id: team.id,
                     logoUrl: team.logoUrl,
                     name: team.name,
-                    isInRound: parseInt(team.eliminationRound) <= parseInt(roundId),
+                    isInRound: parseInt(team.latestActiveRound) <= parseInt(roundId),
                     isEliminated: team.isEliminated,
-                    points: parseInt(team.eliminationRound) <= parseInt(roundId) ? this.getPointsForKnockout(roundId) : 0
+                    points: parseInt(team.latestActiveRound) <= parseInt(roundId) ? this.getPointsForKnockout(roundId) : 0
                 },
                 participants: kos.map(ko => {
                     return {
