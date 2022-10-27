@@ -174,9 +174,11 @@ export class KnockoutService {
                     await queryRunner.manager.getRepository(Team)
                         .createQueryBuilder()
                         .update(Team)
-                        .set({ isEliminated: false, 
-                            eliminationRound: knockout.round === '2' ? '1' : '2,5', 
-                            latestActiveRound: knockout.round === '2' ? '1' : '2,5' })
+                        .set({
+                            isEliminated: false,
+                            eliminationRound: knockout.round === '2' ? '1' : '2,5',
+                            latestActiveRound: knockout.round === '2' ? '1' : '2,5'
+                        })
                         .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.homeTeam.id : item.awayTeam.id })
                         .execute()
                         .catch((err) => {
@@ -240,7 +242,11 @@ export class KnockoutService {
                 await queryRunner.manager.getRepository(Team)
                     .createQueryBuilder()
                     .update(Team)
-                    .set({ isEliminated: knockout.round === '4' ? false : true, eliminationRound: knockout.round })
+                    .set({
+                        isEliminated: knockout.round === '4' ? false : true,
+                        eliminationRound: knockout.round,
+                        latestActiveRound: knockout.round === '4' ? '3' : knockout.round
+                    })
                     .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id })
                     .execute()
                     .catch((err) => {
