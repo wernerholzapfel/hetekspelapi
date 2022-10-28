@@ -18,6 +18,9 @@ export class Pushtoken {
 
     @Column({select: false})
     pushToken: string;
+    
+    @Column({default: false})
+    isDeleted: boolean
 
     @ManyToOne(type => Participant, participant => participant.matchPredictions, {nullable: false})
     participant: Participant;

@@ -1,17 +1,18 @@
-import {Injectable} from '@nestjs/common';
-import {Repository} from "typeorm";
+import { Injectable } from '@nestjs/common';
+import { Repository } from "typeorm";
 import * as admin from "firebase-admin";
-import {Pushtoken} from "../pushtoken/pushtoken.entity";
-import {Participant} from "../participant/participant.entity";
+import { Pushtoken } from "../pushtoken/pushtoken.entity";
+import { Participant } from "../participant/participant.entity";
 import { InjectRepository } from '@nestjs/typeorm';
+import { response } from 'express';
 
 @Injectable()
 export class NotificationService {
 
     constructor(@InjectRepository(Pushtoken)
     private readonly pushTokenRepo: Repository<Pushtoken>,
-    @InjectRepository(Participant)
-    private readonly participantRepo: Repository<Participant>) {
+        @InjectRepository(Participant)
+        private readonly participantRepo: Repository<Participant>) {
     }
 
     async sendNotification(): Promise<admin.messaging.MessagingDevicesResponse[]> {
@@ -19,31 +20,34 @@ export class NotificationService {
             .createQueryBuilder('pushtoken')
             .leftJoin('pushtoken.participant', 'participant')
             .select(['participant.id', 'participant.displayName', 'pushtoken.pushToken'])
-            .where('pushtoken.pushToken is not NULL')
+            .where('pushtoken.isDeleted = false')
             .getMany();
 
 
-        const messagingDevicesResponse: any[] = []
-        await pushtokens.forEach(async token => {
-                await admin.messaging().sendToDevice(token.pushToken, {
-                    notification: {
-                        title: 'Het WK Spel',
-                        body: `Hoi ${token.participant.displayName} de stand is bijgewerkt.`,
-                        badge: '0'
-                    }
-                }, {})
-                    .then(async response => {
-                        await messagingDevicesResponse.push({...response, token: token})
-                    })
-                    .catch(async error => await console.log(error))
-            }
+        pushtokens.forEach(async (token) => {
+            await admin.messaging().sendToDevice(token.pushToken, {
+                notification: {
+                    title: 'Het WK Spel',
+                    body: `Hoi ${token.participant.displayName}, de stand is bijgewerkt.`,
+                    badge: '0'
+                }
+            }, {})
+                .then(async (response) => {
+                    this.cleanupToken({ ...response, token })
+                })
+                .catch(async (error) => console.log(error))
+                .finally(async () => {
+                });
+        }
         )
-        await this.cleanupTokens(messagingDevicesResponse)
-            .then(succes => console.log('succes'))
-            .catch(error => console.log('error: ' + error))
-            .finally(() => console.log('final cleanup'))
 
-        return messagingDevicesResponse;
+
+        // await this.cleanupTokens(messagingDevicesResponse)
+        // .then(succes => console.log('succes'))
+        // .catch(error => console.log('error: ' + error))
+        // .finally(() => console.log('final cleanup'))
+
+        return [];
     }
 
     async sendReminderNotifcation() {
@@ -107,15 +111,10 @@ export class NotificationService {
     }
 
     // Cleans up the tokens that are no longer valid.
-    async cleanupTokens(responses) {
-        console.log(responses.length)
-        // For each notification we check if there was an error.
-        const tokensDelete = [];
-        await responses.forEach((response) => {
-            response.results.forEach((result) => {
+    async cleanupToken(response) {
+        return await response.results.forEach((result) => {
                 const error = result.error;
                 if (error) {
-                    console.log(response.participant)
                     console.error('Failure sending notification to', response.token.participant.displayName);
                     // Cleanup the tokens who are not registered anymore.
                     if (error.code === 'messaging/invalid-registration-token' ||
@@ -124,14 +123,12 @@ export class NotificationService {
                         this.pushTokenRepo
                             .createQueryBuilder()
                             .update(Pushtoken)
-                            .set({pushToken: null})
-                            .where("id = :id", {id: response.token.participant.id})
+                            .set({ isDeleted: true })
+                            .where("pushToken = :pushToken", { pushToken: response.token.pushToken})
                             .execute();
                     }
                 }
-            });
-        })
-        return Promise.all(tokensDelete);
+            })
     }
 }
 
