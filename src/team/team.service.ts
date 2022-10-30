@@ -16,7 +16,7 @@ export class TeamService {
     constructor(@InjectRepository(Team)
     private readonly repository: Repository<Team>,
     @InjectRepository(Knockout)
-    private readonly knockoutRepo: Repository<Knockout>,
+        private readonly knockoutRepo: Repository<Knockout>,
         private standService: StandService,
         private dataSource: DataSource) {
     }
@@ -35,6 +35,7 @@ export class TeamService {
         const ko = await this.knockoutRepo
             .createQueryBuilder('knockout')
             .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
+            .where('knockout."homeScore" is not null')
             .addOrderBy('knockout.date', 'DESC')
             .limit(3)
             .getMany();
