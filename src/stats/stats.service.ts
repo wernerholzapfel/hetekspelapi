@@ -1,26 +1,26 @@
-import {Injectable, Logger} from '@nestjs/common';
-import {Repository} from "typeorm";
-import {Match} from "../match/match.entity";
-import {Team} from "../team/team.entity";
-import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
+import { Injectable, Logger } from '@nestjs/common';
+import { Repository } from "typeorm";
+import { Match } from "../match/match.entity";
+import { Team } from "../team/team.entity";
+import { KnockoutPrediction } from "../knockout-prediction/knockout-prediction.entity";
 import * as admin from "firebase-admin";
-import {Participant} from "../participant/participant.entity";
+import { Participant } from "../participant/participant.entity";
 import { InjectRepository } from '@nestjs/typeorm';
 import { Knockout } from '../knockout/knockout.entity';
 
 @Injectable()
 export class StatsService {
 
-    private readonly logger = new Logger('StatsService', {timestamp: true});
+    private readonly logger = new Logger('StatsService', { timestamp: true });
 
     constructor(@InjectRepository(Match)
     private readonly matchRepo: Repository<Match>,
-    @InjectRepository(Team)
-    private readonly teamRepo: Repository<Team>,
-    @InjectRepository(KnockoutPrediction)
-                private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
-    @InjectRepository(Participant)
-                private readonly participantRepo: Repository<Participant>) {
+        @InjectRepository(Team)
+        private readonly teamRepo: Repository<Team>,
+        @InjectRepository(KnockoutPrediction)
+        private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
+        @InjectRepository(Participant)
+        private readonly participantRepo: Repository<Participant>) {
     }
 
     async createTotoStats(): Promise<any[]> {
@@ -63,6 +63,7 @@ export class StatsService {
         return matches;
     }
 
+    // deprecated  
     async getFormInformation(): Promise<any> {
         return this.participantRepo
             .createQueryBuilder('participant')
@@ -77,6 +78,20 @@ export class StatsService {
             .groupBy('participant.id')
             .orderBy('participant.createdDate', "ASC")
             .getRawMany()
+    }
+    
+    async getParticipantsFormInformation(): Promise<any> {
+         return this.participantRepo
+            .createQueryBuilder('participant')
+            .loadRelationCountAndMap('participant.matchpredictions', 'participant.matchPredictions')
+            .loadRelationCountAndMap('participant.poulepredictions', 'participant.poulePredictions')
+            .loadRelationCountAndMap('participant.knockoutpredictions', 'participant.knockoutPredictions')
+            .select('participant.displayName')
+            .where('participant.isAllowed')
+            .groupBy('participant.id')
+            .orderBy('participant.createdDate', "ASC")
+            .getMany()
+
     }
 
     async createKnockoutStats(): Promise<any> {

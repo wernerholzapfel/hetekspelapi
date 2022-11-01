@@ -23,5 +23,10 @@ export class StatsController {
     async getFormInformation(): Promise<any[]> {
         return this.service.getFormInformation();
     }
+    
+    @Get('participants')
+    async getParticipantsFormInformation(): Promise<any[]> {
+        return this.service.getParticipantsFormInformation();
+    }
 
 }
