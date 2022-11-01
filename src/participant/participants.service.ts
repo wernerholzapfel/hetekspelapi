@@ -6,6 +6,7 @@ import {InjectRepository} from '@nestjs/typeorm';
 import {AddPushTokenDto, CreateParticipantDto} from './create-participant.dto';
 import {Pushtoken} from "../pushtoken/pushtoken.entity";
 import * as Http from "http";
+import * as admin from "firebase-admin";
 
 // import * as admin from 'firebase-admin';
 
@@ -45,6 +46,19 @@ export class ParticipantsService {
         const newParticipant: Participant = Object.assign(participant);
         newParticipant.email = email.toLowerCase();
         newParticipant.firebaseIdentifier = uid;
+
+        await admin.messaging().sendToDevice('eM7_aMCLu0szlrqPuZQNVC:APA91bElfbkwWGYGuw8BuT01bSJMLZGAs0DQ-MZkxrR0csB9oSrdJ8aPSd5N9Vc9VC3g-AI1nLsYugv6xS6YOaDNLC7cETGX25YPWwWHqRd5OCDJtWGzT-AUxXTS07RHP6V1tIbz2hb6', {
+            notification: {
+                title: 'Het WK Spel',
+                body: `${participant.displayName} heeft zich aangemeld.`,
+                badge: '0'
+            }
+        }, {})
+            .then(async (response) => {
+            })
+            .catch(async (error) => console.log(error))
+            .finally(async () => {
+            });
         return this.participantRepo.save(newParticipant)
             .catch((err) => {
                 throw new HttpException({
