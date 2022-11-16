@@ -21,6 +21,14 @@ export class PoulePredictionService {
     }
 
 
+    async getStandBasedOnPredictionsForLoggedInUser(firebaseIdentifier: string, poule: string) {
+        const matchPredictions = await this.matchPredictionService.findMatchesForLoggedInUser(firebaseIdentifier);
+        const standBasedOnMatches = [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === poule), true),
+        ]
+
+        return standBasedOnMatches
+    }
+
     async findPoulePredictionsForLoggedInUser(firebaseIdentifier: string): Promise<PoulePrediction[]> {
         const poulePredictions = await this.poulePredictionRepo
             .createQueryBuilder('pouleprediction')

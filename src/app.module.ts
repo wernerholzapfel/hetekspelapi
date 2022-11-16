@@ -1,4 +1,4 @@
-import {CacheInterceptor, CacheModule, Logger, MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
+import {CacheModule, Logger, MiddlewareConsumer, Module, RequestMethod} from '@nestjs/common';
 import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
@@ -28,8 +28,8 @@ import {Headline} from "./headline/headline.entity";
 import {StatsModule} from './stats/stats.module';
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {InvalidateCacheInterceptor} from "./invalidate-cache.interceptor";
-import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
-
+import CustomHttpCacheInterceptor from './custom-http-cache.interceptor';
+// import * as admin from 'firebase-admin'
 @Module({
     imports: [
         TypeOrmModule.forFeature([Hetekspel]),
@@ -54,7 +54,7 @@ import CustomHttpCacheInterceptor from "./custom-http-cache.interceptor";
         }), 
         ParticipantsModule,
         CacheModule.register({
-            ttl: null, // seconds
+            ttl: 0, // seconds
             // maximum number of items in cache
         }),
         TeamModule,
@@ -113,7 +113,8 @@ export class AppModule {
             {path: '/headline', method: RequestMethod.POST},
             {path: '/stand', method: RequestMethod.POST},
             {path: '/stats/**', method: RequestMethod.POST},
-            {path: '/poule-prediction', method: RequestMethod.GET});
+            {path: '/poule-prediction', method: RequestMethod.GET},
+            {path: '/poule-prediction/*', method: RequestMethod.GET});
 
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/match', method: RequestMethod.POST},
@@ -129,7 +130,7 @@ export class AppModule {
         )
     
 
-    //   admin.auth().setCustomUserClaims('Klp8krW6qohZTse4hAURW10FrOy1', {admin: true}).then(response => {
+    //   admin.auth().setCustomUserClaims('', {admin: true}).then(response => {
             // this.logger.log('customerset');
             // this.logger.log(response);
         // });
