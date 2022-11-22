@@ -17,6 +17,10 @@ export class MatchController {
     async getFullScore(): Promise<Match[]> {
         return this.service.getFullScore();
     }
+     @Get('upcoming')
+    async getUpcomingMatches(): Promise<Match[]> {
+        return this.service.getUpcomingMatches();
+    }
 
     @Get(':id')
     async getMatch( @Param('id') id: string): Promise<Match> {

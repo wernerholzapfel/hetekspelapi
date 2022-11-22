@@ -63,6 +63,50 @@ export class MatchService {
         })
         // return [];
     }
+    async getUpcomingMatches(): Promise<any[]> {
+
+        // return await this.matchRepo
+        //     .createQueryBuilder('match')
+        //     .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+        //     .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+        //     .where('match.homeScore is null')
+        //     .orderBy('match.ordering', "DESC")
+        //     .getOne();
+        let matches: any[] = await this.matchRepo
+            .createQueryBuilder('match')
+            .leftJoinAndSelect('match.matchPredictions', 'matchPredictions')
+            .leftJoinAndSelect('match.homeTeam', 'homeTeam')
+            .leftJoinAndSelect('match.awayTeam', 'awayTeam')
+            .where('match.homeScore is null')
+            .orderBy('match.ordering')
+            .take(3)
+            .getMany()
+
+        matches = matches.map(match => {
+        return {
+            ...match,
+            matchPredictions: match.matchPredictions.map(mp => {
+                return {
+                    ...mp,
+                    toto: mp.homeScore > mp.awayScore ? 1 : mp.homeScore < mp.awayScore ? 2 : 3
+                }
+            })
+        }})
+
+        matches = matches.map(match => {
+            return {
+            ...match,
+            toto1: match.matchPredictions.filter(mp => mp.toto === 1).length,
+            toto2: match.matchPredictions.filter(mp => mp.toto === 2).length,
+            toto3: match.matchPredictions.filter(mp => mp.toto === 3).length,
+        }})
+
+
+        return matches.map(match => {
+            delete match['matchPredictions'];
+            return match
+        });
+    }
 
     async findMatch(matchId): Promise<Match> {
         return await this.matchRepo
