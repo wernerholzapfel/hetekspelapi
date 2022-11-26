@@ -17,7 +17,8 @@ export class TeamController {
     
     @Get('latestActive')
     async getStillActiveTeams(): Promise<Team[]> {
-        return this.service.getStillActiveTeams();
+        return [];
+        // return this.service.getStillActiveTeams();
     }
 
     @Put()
