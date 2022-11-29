@@ -289,9 +289,9 @@ export class StandService {
                 poulePoints: p.poulePoints ? parseInt(p.poulePoints, 10):0,
                 deltaMatchPoints: p.deltaMatchPoints ? parseInt(p.deltaMatchPoints, 10):0,
                 deltaKnockoutPoints: 
-                    p.deltaHomeKnockoutPoints ? parseInt(p.deltaHomeKnockoutPoints, 10) : 0 +
-                    p.deltaAwayKnockoutPoints ? parseInt(p.deltaAwayKnockoutPoints, 10) : 0 +
-                    p.deltaWinnerKnockoutPoints ? parseInt(p.deltaWinnerKnockoutPoints, 10) : 0,
+                    (p.deltaHomeKnockoutPoints ? parseInt(p.deltaHomeKnockoutPoints, 10) : 0) +
+                    (p.deltaAwayKnockoutPoints ? parseInt(p.deltaAwayKnockoutPoints, 10) : 0) +
+                    (p.deltaWinnerKnockoutPoints ? parseInt(p.deltaWinnerKnockoutPoints, 10) : 0),
                 deltaPoulePoints: p.deltaPoulePoints ? parseInt(p.deltaPoulePoints, 10):0,
             }
         }).map(pp => {
