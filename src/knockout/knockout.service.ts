@@ -55,7 +55,7 @@ export class KnockoutService {
             .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
             .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
             .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
-            .orderBy('knockout.matchId')
+            .orderBy('knockout.ordering')
             .getMany();
 
         return knockout.map(ko => {
