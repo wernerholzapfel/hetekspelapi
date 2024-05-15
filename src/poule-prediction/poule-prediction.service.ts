@@ -1,22 +1,22 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Repository} from 'typeorm';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Participant} from '../participant/participant.entity';
-import {PoulePrediction} from './poule-prediction.entity';
-import {CreatePoulePredictionDto} from './create-poule-prediction.dto';
-import {MatchPrediction} from "../match-prediction/match-prediction.entity";
-import {Team} from "../team/team.entity";
-import {MatchPredictionService} from "../match-prediction/match-prediction.service";
-import {Match} from "../match/match.entity";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Participant } from '../participant/participant.entity';
+import { PoulePrediction } from './poule-prediction.entity';
+import { CreatePoulePredictionDto } from './create-poule-prediction.dto';
+import { MatchPrediction } from "../match-prediction/match-prediction.entity";
+import { Team } from "../team/team.entity";
+import { MatchPredictionService } from "../match-prediction/match-prediction.service";
+import { Match } from "../match/match.entity";
 
 @Injectable()
 export class PoulePredictionService {
 
     constructor(@InjectRepository(PoulePrediction)
-                private readonly poulePredictionRepo: Repository<PoulePrediction>,
-                @InjectRepository(Participant)
-                private readonly participantRepo: Repository<Participant>,
-                private matchPredictionService: MatchPredictionService) {
+    private readonly poulePredictionRepo: Repository<PoulePrediction>,
+        @InjectRepository(Participant)
+        private readonly participantRepo: Repository<Participant>,
+        private matchPredictionService: MatchPredictionService) {
 
     }
 
@@ -34,12 +34,13 @@ export class PoulePredictionService {
             .createQueryBuilder('pouleprediction')
             .leftJoinAndSelect('pouleprediction.team', 'team')
             .leftJoin('pouleprediction.participant', 'participant')
-            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             .getMany();
 
 
         const matchPredictions = await this.matchPredictionService.findMatchesForLoggedInUser(firebaseIdentifier);
-        const poulesBasedOnMatches = [...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
+        const poulesBasedOnMatches = [
+            ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'A'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'B'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'C'), true),
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'D'), true),
@@ -49,16 +50,26 @@ export class PoulePredictionService {
             ...this.berekenStand(matchPredictions.filter(mp => mp.match.poule === 'H'), true),
         ]
 
-        return poulesBasedOnMatches.map(line => {
+        const thirdpositions = poulesBasedOnMatches.filter(pp => pp.positie === 3)
+        .sort((a, b) => b.thirdPositionScore - a.thirdPositionScore)
+
+        let poulePredictionSelected = poulesBasedOnMatches.map(pp => {
+            return {
+                ...pp,
+                selected:  pp.positie < 3 ? true : pp.positie === 4 ? false : !!thirdpositions.find((tp, index) => tp.team.id.includes(pp.team.id) && index < 4)
+            }
+        })
+
+        return poulePredictionSelected.map(line => {
             const poulePrediction = poulePredictions.find(pp => pp.team.id === line.team.id)
 
             if (poulePrediction) {
-
                 return {
                     ...line,
                     id: poulePrediction.id,
                     spelpunten: poulePrediction.spelpunten,
-                    positie: poulePrediction.positie
+                    positie: poulePrediction.positie,
+                    selected: poulePrediction.selected
                 }
             } else {
                 delete line['id'];
@@ -72,7 +83,7 @@ export class PoulePredictionService {
             .createQueryBuilder('pouleprediction')
             .leftJoinAndSelect('pouleprediction.team', 'team')
             .leftJoin('pouleprediction.participant', 'participant')
-            .where('participant.id = :participantId', {participantId})
+            .where('participant.id = :participantId', { participantId })
             .getMany();
 
         return poulePredictions
@@ -82,13 +93,13 @@ export class PoulePredictionService {
 
         const matches = await this.matchPredictionService.findMatches();
         const poulesBasedOnMatches = [...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'A'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'B'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'C'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'D'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'E'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'F'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'G'), true),
-            ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'H'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'B'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'C'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'D'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'E'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'F'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'G'), true),
+        ...this.berekenWerkelijkeStand(matches.filter(mp => mp.poule === 'H'), true),
         ]
         return poulesBasedOnMatches
     }
@@ -97,7 +108,7 @@ export class PoulePredictionService {
 
         const participant = await this.participantRepo
             .createQueryBuilder('participant')
-            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             .getOne();
 
         return await this.poulePredictionRepo.save(items.map(pp => {
@@ -106,7 +117,7 @@ export class PoulePredictionService {
             }
             return {
                 ...pp,
-                team: {id: pp.team.id},
+                team: { id: pp.team.id },
                 participant
             }
         }))
@@ -323,7 +334,7 @@ export class PoulePredictionService {
             } else if (line.team.id === matchPrediction.match.awayTeam.id) {
                 return this.updateTeamLine(line, matchPrediction, false);
             } else {
-                return {...line};
+                return { ...line };
             }
         });
 
@@ -336,7 +347,7 @@ export class PoulePredictionService {
             } else if (line.team.id === match.awayTeam.id) {
                 return this.updateWerkelijkeTeamLine(line, match, false);
             } else {
-                return {...line};
+                return { ...line };
             }
         });
 
@@ -344,8 +355,8 @@ export class PoulePredictionService {
 
     updateWerkelijkeTeamLine(line: PoulePrediction, match: Match, homeTeam: boolean) {
         return match.homeScore === undefined || match.awayScore === undefined ||
-        match.homeScore === null || match.awayScore === null ?
-            {...line} :
+            match.homeScore === null || match.awayScore === null ?
+            { ...line } :
             {
                 ...line,
                 gespeeld: line.gespeeld + 1,
@@ -363,8 +374,8 @@ export class PoulePredictionService {
 
     updateTeamLine(line: PoulePrediction, matchPrediction: MatchPrediction, homeTeam: boolean) {
         return matchPrediction.homeScore === undefined || matchPrediction.awayScore === undefined ||
-        matchPrediction.homeScore === null || matchPrediction.awayScore === null ?
-            {...line} :
+            matchPrediction.homeScore === null || matchPrediction.awayScore === null ?
+            { ...line } :
             {
                 ...line,
                 gespeeld: line.gespeeld + 1,

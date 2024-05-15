@@ -28,6 +28,9 @@ export class PoulePrediction {
 
     @Column({nullable: true})
     positie: number;
+    
+    @Column({nullable: true})
+    selected: boolean;
 
     @Column({nullable: true})
     gespeeld: number;

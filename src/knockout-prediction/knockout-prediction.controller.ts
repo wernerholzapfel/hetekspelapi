@@ -13,11 +13,16 @@ export class KnockoutPredictionController {
     async findMatchesForParticipant(@Req() req): Promise<KnockoutPrediction[]> {
         return this.service.findKnockoutForParticipant(req.user.uid);
     }
+    @Get('getlatest')
+    async getLatest(@Req() req): Promise<any[]> {
+        return this.service.getLatest();
+    }
 
     @Get(':id')
     async findKnockoutForParticipant(@Req() req, @Param('id') id: string): Promise<KnockoutPrediction[]> {
         return this.service.findKnockoutForParticipant(id);
-    }
+    } 
+
 
     @Get('round/:roundid/team/:teamid')
     async findKnockoutForTeamInRound(@Req() req, @Param('roundid') roundId: string, @Param('teamid') teamId: string): Promise<KnockoutPrediction[]> {

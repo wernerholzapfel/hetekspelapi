@@ -18,8 +18,7 @@ export class MatchPredictionController {
 
     @Get('today')
     async findTodaysMatchesForLoggedInUser(@Req() req): Promise<{ predictionType: string, knockout: Knockout[], matchPredictions?: MatchPrediction[], knockoutPredictions?: KnockoutPrediction[] }> {
-        return null
-        // return this.service.findTodaysMatchesForLoggedInUser(req.user.uid);
+        return this.service.findTodaysMatchesForLoggedInUser(req.user.uid);
     }
 
     @Get(':id')

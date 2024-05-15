@@ -70,6 +70,13 @@ export class TeamService {
         await queryRunner.connect();
         await queryRunner.startTransaction();
         try {
+
+            const teamBeforeUpdate = await this.dataSource.manager.getRepository(Team)
+            .createQueryBuilder('team')
+            .select('*')
+            .where('team.id = :id', { id: teamPositionDto.id })
+            .getOne()
+
             const roundIds = await this.dataSource.manager.getRepository(Knockout)
                 .createQueryBuilder('knockout')
                 .select('knockout.id')
@@ -144,6 +151,7 @@ export class TeamService {
                     });
             }
 
+            if (teamBeforeUpdate.latestActiveRound !== '16') {
             await await this.dataSource.manager
                 .createQueryBuilder()
                 .leftJoin('knockout', 'knockout')
@@ -180,7 +188,7 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
             return team;
-
+            }
             await queryRunner.commitTransaction();
         } catch (err) {
             this.logger.log(err);

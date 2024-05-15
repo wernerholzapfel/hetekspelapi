@@ -6,6 +6,7 @@ import {Match} from '../match/match.entity';
 import {KnockoutPrediction} from "./knockout-prediction.entity";
 import {CreateKnockoutPredictionDto} from "./create-knockout-prediction.dto";
 import {Team} from "../team/team.entity";
+import { Knockout } from '../knockout/knockout.entity';
 
 @Injectable()
 export class KnockoutPredictionService {
@@ -14,6 +15,8 @@ export class KnockoutPredictionService {
 
     constructor(@InjectRepository(KnockoutPrediction)
                 private readonly knockoutPredictionRepository: Repository<KnockoutPrediction>,
+                @InjectRepository(Knockout)
+                private readonly knockoutRepository: Repository<Knockout>,
                 @InjectRepository(Participant)
                 private readonly participantRepo: Repository<Participant>,
                 @InjectRepository(Team)
@@ -36,6 +39,49 @@ export class KnockoutPredictionService {
             .getMany();
     }
 
+    async getLatest() {
+        let listOfTeamInRound: any[] = []
+        let poule = []
+        const ko = await this.knockoutRepository
+            .createQueryBuilder('knockout')
+            .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
+            .where('knockout."homeScore" is not null')
+            .addOrderBy('knockout.date', 'DESC')
+            .limit(3)
+            .getMany();
+
+        if (ko.length <= 3) {
+            poule = await this.teamRepo
+            .createQueryBuilder('teams')
+            .where('teams.poulePosition in (1,2)')
+            .addOrderBy('teams.updatedDate', 'DESC')
+            .limit(3 - ko.length)
+            .getMany();
+        }
+
+        listOfTeamInRound = [
+            ...ko.map(k => {
+                return {
+                    team: k.winnerTeam,
+                    round: k.round !== "3" ?  (parseInt(k.round) / 2).toString(): "3"
+                }
+            }), ...poule.map(p => {
+                return {
+                    team: p,
+                    round: '16'
+                }
+            })]
+
+        let henkie = [];
+        // return listOfTeamInRound.map(async item => {
+        //    return [{'ok': 1}]
+        // })
+        listOfTeamInRound.forEach(async (item) => {
+                henkie = [...henkie, await this.findKnockoutForTeamInRound(item.round, item.team.id)]
+        });
+        return henkie;
+    }
+
     async findKnockoutForTeamInRound(roundId, teamId: string): Promise<any> {
         const team = await this.teamRepo
         .createQueryBuilder('team')
@@ -46,6 +92,7 @@ export class KnockoutPredictionService {
             .getOne()
 
         if (roundId === '1' || roundId === '3') {
+
             const kos = await this.knockoutPredictionRepository 
                 .createQueryBuilder('knockoutPrediction')
                 .leftJoinAndSelect('knockoutPrediction.participant', 'participant')
