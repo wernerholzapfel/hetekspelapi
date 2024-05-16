@@ -39,11 +39,9 @@ export class KnockoutService {
             .getMany();
 
         return knockout.map(ko => {
-
-            const hasPrediction = ko.prediction
             return {
                 ...ko,
-                selectedTeam: hasPrediction ? { id: ko.prediction.selectedTeam.id } : null
+                selectedTeam: ko.prediction && ko.prediction.selectedTeam ? { id: ko.prediction.selectedTeam.id } : null
             }
         })
     }

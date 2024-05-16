@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Participant } from '../participant/participant.entity';
@@ -8,15 +8,23 @@ import { MatchPrediction } from "../match-prediction/match-prediction.entity";
 import { Team } from "../team/team.entity";
 import { MatchPredictionService } from "../match-prediction/match-prediction.service";
 import { Match } from "../match/match.entity";
+import { KnockoutPrediction } from '../knockout-prediction/knockout-prediction.entity';
+import { KnockoutPredictionService } from '../knockout-prediction/knockout-prediction.service';
+import { KnockoutService } from '../knockout/knockout.service';
 
 @Injectable()
 export class PoulePredictionService {
+    private readonly logger = new Logger('PoulePredictionService', { timestamp: true });
 
     constructor(@InjectRepository(PoulePrediction)
     private readonly poulePredictionRepo: Repository<PoulePrediction>,
         @InjectRepository(Participant)
         private readonly participantRepo: Repository<Participant>,
-        private matchPredictionService: MatchPredictionService) {
+        @InjectRepository(KnockoutPrediction)
+        private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
+        private matchPredictionService: MatchPredictionService,
+        private knockoutService: KnockoutService,
+        private knockoutPredictionService: KnockoutPredictionService) {
 
     }
 
@@ -51,12 +59,12 @@ export class PoulePredictionService {
         ]
 
         const thirdpositions = poulesBasedOnMatches.filter(pp => pp.positie === 3)
-        .sort((a, b) => b.thirdPositionScore - a.thirdPositionScore)
+            .sort((a, b) => b.thirdPositionScore - a.thirdPositionScore)
 
         let poulePredictionSelected = poulesBasedOnMatches.map(pp => {
             return {
                 ...pp,
-                selected:  pp.positie < 3 ? true : pp.positie === 4 ? false : !!thirdpositions.find((tp, index) => tp.team.id.includes(pp.team.id) && index < 4)
+                selected: pp.positie < 3 ? true : pp.positie === 4 ? false : !!thirdpositions.find((tp, index) => tp.team.id.includes(pp.team.id) && index < 4)
             }
         })
 
@@ -104,14 +112,14 @@ export class PoulePredictionService {
         return poulesBasedOnMatches
     }
 
-    async createPoulePrediction(items: CreatePoulePredictionDto[], firebaseIdentifier): Promise<PoulePrediction[]> {
+    async createPoulePrediction(items: CreatePoulePredictionDto[], firebaseIdentifier): Promise<KnockoutPrediction[]> {
 
         const participant = await this.participantRepo
             .createQueryBuilder('participant')
             .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             .getOne();
 
-        return await this.poulePredictionRepo.save(items.map(pp => {
+        const ppSaved = await this.poulePredictionRepo.save(items.map(pp => {
             if (!pp.team) {
                 console.log(pp)
             }
@@ -127,8 +135,185 @@ export class PoulePredictionService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+
+        const knockoutSchema = await this.knockoutService.findKnockouts(firebaseIdentifier)
+
+        // get nummer dries
+        // bepaal poule van nummer dries en zet op volgorde.
+         const poules =   await this.findPoulePredictionsForLoggedInUser(firebaseIdentifier)
+         const nummerDries = poules.filter(item => item.positie === 3 && item.selected)
+
+         const nummerDrieIdentifier = nummerDries.sort((a, b) => {
+            if (b.poule > a.poule) {
+                return -1;
+            }
+            if (a.poule > b.poule) {
+                return 1;
+            }
+            return 0;
+        }).reduce((acc: string, val) => acc + val.poule, '');
+
+        const thirdplaces = this.getPositionForThirdPlacedTeams(nummerDrieIdentifier);
+
+        const speelschema = knockoutSchema.filter(ks => ks.round === '16').map(match => {
+            switch (match.awayId) {
+                case 'WB':
+                    match.awayId = thirdplaces.WB;
+                    break;
+                case 'WC':
+                    match.awayId = thirdplaces.WC;
+                    break;
+                case 'WE':
+                    match.awayId = thirdplaces.WE;
+                    break;
+                case 'WF':
+                    match.awayId = thirdplaces.WF;
+                    break;
+                default:
+                // code block
+            }
+            return {
+                ...match,
+                homeTeam: this.setTeam(knockoutSchema, match.homeId, match.round, poules, null),
+                awayTeam: this.setTeam(knockoutSchema, match.awayId, match.round, poules, null)
+            };
+        });
+        const knockoutPredictions = await this.knockoutPredictionService.findKnockoutForParticipant(participant.id)
+
+        const kpSaved = await this.knockoutPredictionRepo.save(knockoutPredictions.map(kp => {
+            const knockoutMatch = speelschema.find(ks => ks.id === kp.knockout.id);
+            this.logger.log(knockoutMatch)
+                return {
+                ...kp,
+                homeTeam: { id: knockoutMatch.homeTeam.id },
+                awayTeam: { id: knockoutMatch.awayTeam.id },
+                selectedTeam: { id: kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.homeTeam.id || kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.awayTeam.id ? kp.selectedTeam.id : null }
+            }
+        }))
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return knockoutPredictions;
+
+        // check of er knockoutpredictions zijn van round 16
+        // update knockoutpredictions indien home of awayteam anders is.
+
     }
 
+    private setTeam(speelschema, id, round, poules, selectedTeam: string): Team {
+        if (round === '16') {
+            return poules.find(p => id === `${p.positie}${p.poule}`) ? poules.find(p => id === `${p.positie}${p.poule}`).team : '';
+        }
+        //  else if (round === '3') {
+        //     // uitzondering voor Verliezer
+        //     const matchLoser = speelschema.find(sp => sp.matchId === id.substring(1));
+        //     const team = this.getLoserTeam(matchLoser, selectedTeam, id)
+        //     return team;
+        // } else {
+        //     const matchWinner = speelschema.find(sp => sp.matchId === id);
+        //     const team = this.getWinnerTeam(matchWinner, selectedTeam, id)
+        //     return team;
+        // }
+    }
+    private getPositionForThirdPlacedTeams(nummerDrieIdentifier: string): { identifier: string, WB: string, WC: string, WE: string, WF: string } {
+        return [
+            {
+                identifier: 'ABCD',
+                WB: '3A',
+                WC: '3D',
+                WE: '3B',
+                WF: '3C'
+            }, {
+                identifier: 'ABCE',
+                WB: '3A',
+                WC: '3E',
+                WE: '3B',
+                WF: '3C'
+            }, {
+                identifier: 'ABCF',
+                WB: '3A',
+                WC: '3F',
+                WE: '3B',
+                WF: '3C'
+            }, {
+                identifier: 'ABDE',
+                WB: '3D',
+                WC: '3E',
+                WE: '3A',
+                WF: '3B'
+            }, {
+                identifier: 'ABDF',
+                WB: '3D',
+                WC: '3F',
+                WE: '3A',
+                WF: '3B'
+            }, {
+                identifier: 'ABEF',
+                WB: '3E',
+                WC: '3F',
+                WE: '3B',
+                WF: '3A'
+            }, {
+                identifier: 'ACDE',
+                WB: '3E',
+                WC: '3D',
+                WE: '3C',
+                WF: '3A'
+            }, {
+                identifier: 'ACDF',
+                WB: '3F',
+                WC: '3D',
+                WE: '3C',
+                WF: '3A'
+            }, {
+                identifier: 'ACEF',
+                WB: '3E',
+                WC: '3F',
+                WE: '3C',
+                WF: '3A'
+            }, {
+                identifier: 'ADEF',
+                WB: '3E',
+                WC: '3F',
+                WE: '3D',
+                WF: '3A'
+            }, {
+                identifier: 'BCDE',
+                WB: '3E',
+                WC: '3D',
+                WE: '3B',
+                WF: '3C'
+            }, {
+                identifier: 'BCDF',
+                WB: '3F',
+                WC: '3D',
+                WE: '3C',
+                WF: '3B'
+            }, {
+                identifier: 'BCEF',
+                WB: '3F',
+                WC: '3E',
+                WE: '3C',
+                WF: '3B'
+            }, {
+                identifier: 'BDEF',
+                WB: '3F',
+                WC: '3E',
+                WE: '3D',
+                WF: '3B'
+            }, {
+                identifier: 'CDEF',
+                WB: '3F',
+                WC: '3E',
+                WE: '3D',
+                WF: '3C'
+            }
+        ].find(p => p.identifier === nummerDrieIdentifier);
+    }
 
     private berekenWerkelijkeStand(matches: Match[], sortTable: boolean): PoulePrediction[] {
         let table: PoulePrediction[] = [];
