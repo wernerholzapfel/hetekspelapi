@@ -140,8 +140,8 @@ export class PoulePredictionService {
 
         // get nummer dries
         // bepaal poule van nummer dries en zet op volgorde.
-         const nummerDries = items.filter(item => item.positie === 3 && item.selected)
-         const nummerDrieIdentifier = nummerDries.sort((a, b) => {
+        const nummerDries = items.filter(item => item.positie === 3 && item.selected)
+        const nummerDrieIdentifier = nummerDries.sort((a, b) => {
             if (b.poule > a.poule) {
                 return -1;
             }
@@ -178,16 +178,22 @@ export class PoulePredictionService {
         });
         const knockoutPredictions = await this.knockoutPredictionService.findKnockoutForParticipant(participant.id)
 
-        const kpSaved = await this.knockoutPredictionRepo.save(knockoutPredictions.map(kp => {
+        const opteslaan = knockoutPredictions.filter(kps => kps.round === '16').map(kp => {
             const knockoutMatch = speelschema.find(ks => ks.id === kp.knockout.id);
-            this.logger.log(knockoutMatch)
-                return {
+            return {
                 ...kp,
                 homeTeam: { id: knockoutMatch.homeTeam.id },
                 awayTeam: { id: knockoutMatch.awayTeam.id },
-                selectedTeam: { id: kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.homeTeam.id || kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.awayTeam.id ? kp.selectedTeam.id : null }
+                selectedTeam: {
+                    id: kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.homeTeam.id ||
+                        kp.selectedTeam && kp.selectedTeam.id === knockoutMatch.awayTeam.id
+                        ? kp.selectedTeam.id
+                        : null
+                }
             }
-        }))
+        })
+
+        const kpSaved = await this.knockoutPredictionRepo.save(opteslaan)
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
