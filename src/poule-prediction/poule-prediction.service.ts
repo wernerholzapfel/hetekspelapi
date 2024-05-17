@@ -140,9 +140,7 @@ export class PoulePredictionService {
 
         // get nummer dries
         // bepaal poule van nummer dries en zet op volgorde.
-         const poules =   await this.findPoulePredictionsForLoggedInUser(firebaseIdentifier)
-         const nummerDries = poules.filter(item => item.positie === 3 && item.selected)
-
+         const nummerDries = items.filter(item => item.positie === 3 && item.selected)
          const nummerDrieIdentifier = nummerDries.sort((a, b) => {
             if (b.poule > a.poule) {
                 return -1;
@@ -174,8 +172,8 @@ export class PoulePredictionService {
             }
             return {
                 ...match,
-                homeTeam: this.setTeam(knockoutSchema, match.homeId, match.round, poules, null),
-                awayTeam: this.setTeam(knockoutSchema, match.awayId, match.round, poules, null)
+                homeTeam: this.setTeam(knockoutSchema, match.homeId, match.round, items, null),
+                awayTeam: this.setTeam(knockoutSchema, match.awayId, match.round, items, null)
             };
         });
         const knockoutPredictions = await this.knockoutPredictionService.findKnockoutForParticipant(participant.id)
@@ -199,8 +197,6 @@ export class PoulePredictionService {
 
         return knockoutPredictions;
 
-        // check of er knockoutpredictions zijn van round 16
-        // update knockoutpredictions indien home of awayteam anders is.
 
     }
 
@@ -220,6 +216,8 @@ export class PoulePredictionService {
         // }
     }
     private getPositionForThirdPlacedTeams(nummerDrieIdentifier: string): { identifier: string, WB: string, WC: string, WE: string, WF: string } {
+        this.logger.log('nummerDrieIdentifier')
+        this.logger.log(nummerDrieIdentifier)
         return [
             {
                 identifier: 'ABCD',
