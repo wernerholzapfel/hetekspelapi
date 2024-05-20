@@ -15,7 +15,7 @@ export class TeamService {
 
     constructor(@InjectRepository(Team)
     private readonly repository: Repository<Team>,
-    @InjectRepository(Knockout)
+        @InjectRepository(Knockout)
         private readonly knockoutRepo: Repository<Knockout>,
         private standService: StandService,
         private dataSource: DataSource) {
@@ -27,7 +27,7 @@ export class TeamService {
             .orderBy('name')
             .getMany();
     }
-    
+
     async getStillActiveTeams(): Promise<Team[]> {
 
         let listOfTeamInRound = []
@@ -42,18 +42,18 @@ export class TeamService {
 
         if (ko.length < 3) {
             poule = await this.repository
-            .createQueryBuilder('teams')
-            .where('teams.poulePosition in (1,2)')
-            .addOrderBy('teams.updatedDate', 'DESC')
-            .limit(3 - ko.length)
-            .getMany();
+                .createQueryBuilder('teams')
+                .where('teams.poulePosition in (1,2)')
+                .addOrderBy('teams.updatedDate', 'DESC')
+                .limit(3 - ko.length)
+                .getMany();
         }
 
         listOfTeamInRound = [
             ...ko.map(k => {
                 return {
                     team: k.winnerTeam,
-                    round: k.round !== "3" ?  (parseInt(k.round) / 2).toString(): "3"
+                    round: k.round !== "3" ? (parseInt(k.round) / 2).toString() : "3"
                 }
             }), ...poule.map(p => {
                 return {
@@ -69,13 +69,13 @@ export class TeamService {
         // let team
         await queryRunner.connect();
         await queryRunner.startTransaction();
-        try {
-
-            const teamBeforeUpdate = await this.dataSource.manager.getRepository(Team)
+        const teamBeforeUpdate = await this.repository
             .createQueryBuilder('team')
-            .select('*')
             .where('team.id = :id', { id: teamPositionDto.id })
             .getOne()
+
+        try {
+
 
             const roundIds = await this.dataSource.manager.getRepository(Knockout)
                 .createQueryBuilder('knockout')
@@ -86,10 +86,10 @@ export class TeamService {
             const team = await this.dataSource.manager.getRepository(Team)
                 .save({
                     ...teamPositionDto,
-                    eliminationRound: teamPositionDto.isEliminated ? 
+                    eliminationRound: teamPositionDto.isEliminated ?
                         teamPositionDto.eliminationRound : null,
-                    latestActiveRound: teamPositionDto.isEliminated ? 
-                    teamPositionDto.eliminationRound : '16',
+                    latestActiveRound: teamPositionDto.isEliminated ?
+                        teamPositionDto.eliminationRound : '16',
                 })
                 .catch((err) => {
                     throw new HttpException({
@@ -98,13 +98,13 @@ export class TeamService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-                let maxMatchId: any = await this.dataSource.manager.getRepository(Knockout)
+            let maxMatchId: any = await this.dataSource.manager.getRepository(Knockout)
                 .createQueryBuilder('knockout')
                 .select('knockout.ordering')
                 .where('knockout.homeScore is not NULL')
                 .orderBy('knockout.ordering', "DESC")
                 .getOne()
-    
+
             if (!maxMatchId) {
                 maxMatchId = await this.dataSource.manager.getRepository(Match)
                     .createQueryBuilder('match')
@@ -152,42 +152,42 @@ export class TeamService {
             }
 
             if (teamBeforeUpdate.latestActiveRound !== '16') {
-            await await this.dataSource.manager
-                .createQueryBuilder()
-                .leftJoin('knockout', 'knockout')
-                .update(KnockoutPrediction)
-                .set({
-                    homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
-                    homeTableId: maxMatchId.ordering
-                })
-                .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
-                .andWhere('homeTeam.id = :teamId', { teamId: team.id })
-                .execute()
-                .catch((err) => {
-                    throw new HttpException({
-                        message: err.message,
-                        statusCode: HttpStatus.BAD_REQUEST,
-                    }, HttpStatus.BAD_REQUEST);
-                });
+                await this.dataSource.manager
+                    .createQueryBuilder()
+                    .leftJoin('knockout', 'knockout')
+                    .update(KnockoutPrediction)
+                    .set({
+                        homeSpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
+                        homeTableId: maxMatchId.ordering
+                    })
+                    .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
+                    .andWhere('homeTeam.id = :teamId', { teamId: team.id })
+                    .execute()
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
 
-            await await this.dataSource.manager
-                .createQueryBuilder()
-                .leftJoin('knockout', 'knockout')
-                .update(KnockoutPrediction)
-                .set({
-                    awaySpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
-                    awayTableId: maxMatchId.ordering
-                })
-                .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
-                .andWhere('awayTeam.id = :teamId', { teamId: team.id })
-                .execute()
-                .catch((err) => {
-                    throw new HttpException({
-                        message: err.message,
-                        statusCode: HttpStatus.BAD_REQUEST,
-                    }, HttpStatus.BAD_REQUEST);
-                });
-            return team;
+                await this.dataSource.manager
+                    .createQueryBuilder()
+                    .leftJoin('knockout', 'knockout')
+                    .update(KnockoutPrediction)
+                    .set({
+                        awaySpelpunten: team.isEliminated || team.isEliminated === null ? null : 20,
+                        awayTableId: maxMatchId.ordering
+                    })
+                    .where('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
+                    .andWhere('awayTeam.id = :teamId', { teamId: team.id })
+                    .execute()
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+                return team;
             }
             await queryRunner.commitTransaction();
         } catch (err) {
