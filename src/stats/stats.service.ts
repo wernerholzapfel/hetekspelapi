@@ -57,7 +57,7 @@ export class StatsService {
 
         const db = admin.database();
 
-        const docRef = db.ref(`stats/toto`);
+        const docRef = db.ref(`ek2024/stats/toto`);
         docRef.set(matches);
 
         return matches;
@@ -160,7 +160,7 @@ export class StatsService {
 
         const db = admin.database();
 
-        const docRef = db.ref(`stats/knockout`);
+        const docRef = db.ref(`ek2024/stats/knockout`);
         docRef.set(knockoutStats);
         return knockoutStats
     }
