@@ -88,8 +88,8 @@ export class TeamService {
                     ...teamPositionDto,
                     eliminationRound: teamPositionDto.isEliminated ?
                         teamPositionDto.eliminationRound : null,
-                    latestActiveRound: teamPositionDto.isEliminated ?
-                        teamPositionDto.eliminationRound : teamPositionDto.isEliminated === null ? '32' : '16',
+                    latestActiveRound: teamPositionDto.isEliminated === false ?
+                        '16' : teamPositionDto.eliminationRound,
                 })
                 .catch((err) => {
                     throw new HttpException({
