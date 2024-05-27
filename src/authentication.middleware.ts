@@ -23,7 +23,6 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
             admin.auth().verifyIdToken(extractedToken)
                 .then(decodedToken => {
                     const uid = decodedToken.uid;
-                    this.logger.log('uid: ' + uid);
                     admin.auth().getUser(uid)
                         .then(userRecord => {
                             // See the UserRecord reference doc for the contents of userRecord.

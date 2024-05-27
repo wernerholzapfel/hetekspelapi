@@ -75,11 +75,9 @@ export class NotificationService {
             .orderBy('participant.createdDate', "ASC")
             .getMany()
 
-        this.logger.log(participantsComplete.length)
 
         pushtokens.forEach(async token => {
             if (this.participantIsIncomplete(token.participant.id, participantsComplete)) {
-                this.logger.log(token.participant.displayName);
             //     await admin.messaging().sendToDevice(token.pushToken, {
             //         notification: {
             //             title: 'Het WK Spel',
@@ -109,11 +107,6 @@ export class NotificationService {
             participant.poulepredictions !== 32 ||
             participant.knockoutpredictions !== 16))
 
-        if (returnValue) {
-            this.logger.log(participant.matchpredictions)
-            this.logger.log(participant.poulepredictions)
-            this.logger.log(participant.knockoutpredictions)    
-        } 
         return returnValue
     }
 

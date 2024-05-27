@@ -222,8 +222,6 @@ export class PoulePredictionService {
         // }
     }
     private getPositionForThirdPlacedTeams(nummerDrieIdentifier: string): { identifier: string, WB: string, WC: string, WE: string, WF: string } {
-        this.logger.log('nummerDrieIdentifier')
-        this.logger.log(nummerDrieIdentifier)
         return [
             {
                 identifier: 'ABCD',

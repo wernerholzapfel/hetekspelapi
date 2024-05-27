@@ -29,8 +29,6 @@ export class StandService {
     }
 
     private getSortedPositionStand(sortedStand) {
-        this.logger.log('getSortedPositionStand');
-        this.logger.log(sortedStand);
         let previousMatchPosition = 1;
         let matchPosition = 1
         let previousTotalPosition = 1;
@@ -175,7 +173,6 @@ export class StandService {
         const sortedPositionStand = await this.getTotalStand();
         const db = admin.database();
 
-        this.logger.log(sortedPositionStand);
         const docRef = db.ref(`totaal`);
         docRef.set(sortedPositionStand);
 
@@ -277,8 +274,6 @@ export class StandService {
             .groupBy('participant.id')
             .getRawMany();
 
-        this.logger.log("participants");
-        this.logger.log(participants);
 
         let currentTable = this.getSortedPositionStand(participants.map(p => {
             return {

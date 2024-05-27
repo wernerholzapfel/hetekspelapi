@@ -49,7 +49,7 @@ import CustomHttpCacheInterceptor from './custom-http-cache.interceptor';
                 Hetekspel,
                 Headline,
             ],
-            logging: true,
+            logging: false,
             synchronize: false, // DEV only, do not use on PROD!
         }), 
         ParticipantsModule,
@@ -134,7 +134,7 @@ export class AppModule {
             // this.logger.log('customerset');
             // this.logger.log(response);
         // });
-        // admin.auth().updateUser('ENPg7LZlewdswg6vqVd65K4QjQy1', {displayName: 'Tom Dijkerman'}).then(() => {
+        // admin.auth().updateUser('', {displayName: ''}).then(() => {
         //     this.logger.log('customerset');
         // });
     }
