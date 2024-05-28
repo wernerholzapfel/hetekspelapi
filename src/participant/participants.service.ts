@@ -47,9 +47,9 @@ export class ParticipantsService {
         newParticipant.email = email.toLowerCase();
         newParticipant.firebaseIdentifier = uid;
 
-        await admin.messaging().sendToDevice('fpVQHIYMHkVgpT_nI9hWkw:APA91bE6beYVVTPjapIIxfbHRICnfgGXj7tY9F1xajQidZGERrt4tBIq7sDDa-wddiNiuHWNbhH548qH82-SN0cW9DCmyLGQQ_KMZYpqTQChmT5KixBvx7WV0Cf8ZATmg__BRiYJHwE_', {
+        await admin.messaging().sendToDevice('flQhpuBjJEwCvHMscC6rDX:APA91bGcL7_cd6p1H7r2Ir4x9iNGnQi5GklTYF1TdXM0ROfgDVw3rttktrlZ93Noghjca8USyvvC_4ahzCfi3U7HqoThGC_xm5VSFCgzjzUpm11ToK68P3oLuCrN-1GU5Ujb5iiEYC27', {
             notification: {
-                title: 'Het WK Spel',
+                title: 'Het EK Spel',
                 body: `${participant.displayName} heeft zich aangemeld.`,
                 badge: '0'
             }
