@@ -47,7 +47,7 @@ export class ParticipantsService {
         newParticipant.email = email.toLowerCase();
         newParticipant.firebaseIdentifier = uid;
 
-        await admin.messaging().sendToDevice('flQhpuBjJEwCvHMscC6rDX:APA91bGcL7_cd6p1H7r2Ir4x9iNGnQi5GklTYF1TdXM0ROfgDVw3rttktrlZ93Noghjca8USyvvC_4ahzCfi3U7HqoThGC_xm5VSFCgzjzUpm11ToK68P3oLuCrN-1GU5Ujb5iiEYC27', {
+        await admin.messaging().sendToDevice('68C38E71E9C15843E7DB957448375A9AEB5ADFDE472676F8BC6D74B873403D9C', {
             notification: {
                 title: 'Het EK Spel',
                 body: `${participant.displayName} heeft zich aangemeld.`,
@@ -55,8 +55,9 @@ export class ParticipantsService {
             }
         }, {})
             .then(async (response) => {
+                this.logger.log(response)
             })
-            .catch(async (error) => console.log(error))
+            .catch(async (error) => this.logger.log(error))
             .finally(async () => {
             });
         return this.participantRepo.save(newParticipant)
