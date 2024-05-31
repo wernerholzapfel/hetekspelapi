@@ -47,7 +47,7 @@ export class ParticipantsService {
         newParticipant.email = email.toLowerCase();
         newParticipant.firebaseIdentifier = uid;
 
-        await admin.messaging().sendToDevice('68C38E71E9C15843E7DB957448375A9AEB5ADFDE472676F8BC6D74B873403D9C', {
+        await admin.messaging().sendToDevice(process.env.pushtoken_participants, {
             notification: {
                 title: 'Het EK Spel',
                 body: `${participant.displayName} heeft zich aangemeld.`,
