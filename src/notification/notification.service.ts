@@ -29,7 +29,7 @@ export class NotificationService {
         pushtokens.forEach(async (token) => {
             await admin.messaging().sendToDevice(token.pushToken, {
                 notification: {
-                    title: 'Het WK Spel',
+                    title: 'Het EK Spel',
                     body: `Hoi ${token.participant.displayName}, de stand is bijgewerkt.`,
                     badge: '0'
                 }
