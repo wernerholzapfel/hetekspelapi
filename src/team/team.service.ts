@@ -86,6 +86,8 @@ export class TeamService {
             const team = await this.dataSource.manager.getRepository(Team)
                 .save({
                     ...teamPositionDto,
+                    poulePosition: teamPositionDto.isPositionFinal ?
+                        teamPositionDto.poulePosition : null,
                     eliminationRound: teamPositionDto.isEliminated ?
                         teamPositionDto.eliminationRound : null,
                     latestActiveRound: teamPositionDto.isEliminated === false ?
