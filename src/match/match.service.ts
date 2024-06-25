@@ -79,7 +79,7 @@ export class MatchService {
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
             .where('match.homeScore is null')
             .orderBy('match.date')
-            .take(3)
+            .take(4)
             .getMany()
 
         matches = matches.map(match => {
