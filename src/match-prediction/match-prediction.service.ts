@@ -87,7 +87,7 @@ export class MatchPredictionService {
             // .andWhere('match.date <= :tomorrow', {tomorrow})
             .andWhere('match.date >= :today', {today})
             .orderBy('match.ordering')
-            .take(3)
+            .take(4)
             .getMany();
 
         if (matchPredictions.length === 0) {
