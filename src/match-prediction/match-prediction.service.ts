@@ -1,28 +1,28 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {MatchPrediction} from './match-prediction.entity';
-import {CreateMatchPredictionDto} from './create-match-prediction.dto';
-import {Repository} from 'typeorm';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Participant} from '../participant/participant.entity';
-import {Match} from '../match/match.entity';
-import {KnockoutPrediction} from "../knockout-prediction/knockout-prediction.entity";
-import {Knockout} from "../knockout/knockout.entity";
-import {StandService} from "../stand/stand.service";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { MatchPrediction } from './match-prediction.entity';
+import { CreateMatchPredictionDto } from './create-match-prediction.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Participant } from '../participant/participant.entity';
+import { Match } from '../match/match.entity';
+import { KnockoutPrediction } from "../knockout-prediction/knockout-prediction.entity";
+import { Knockout } from "../knockout/knockout.entity";
+import { StandService } from "../stand/stand.service";
 
 @Injectable()
 export class MatchPredictionService {
 
-    constructor( @InjectRepository(Match)
+    constructor(@InjectRepository(Match)
     private readonly matchRepo: Repository<Match>,
-                @InjectRepository(MatchPrediction)
-                private readonly matchPredictionRepo: Repository<MatchPrediction>,
-                @InjectRepository(Knockout)
-                private readonly knockoutRepo: Repository<Knockout>,
-                @InjectRepository(KnockoutPrediction)
-                private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
-                @InjectRepository(Participant)
-                private readonly participantRepo: Repository<Participant>,
-                private standService: StandService,) {
+        @InjectRepository(MatchPrediction)
+        private readonly matchPredictionRepo: Repository<MatchPrediction>,
+        @InjectRepository(Knockout)
+        private readonly knockoutRepo: Repository<Knockout>,
+        @InjectRepository(KnockoutPrediction)
+        private readonly knockoutPredictionRepo: Repository<KnockoutPrediction>,
+        @InjectRepository(Participant)
+        private readonly participantRepo: Repository<Participant>,
+        private standService: StandService,) {
 
     }
 
@@ -50,18 +50,18 @@ export class MatchPredictionService {
             .leftJoinAndSelect('matchprediction.match', 'match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
-            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             .orderBy('match.ordering')
             .getMany();
 
         if (matchPredictions && matchPredictions.length > 0) {
             combinedMatchPredictions = [...matchPredictions,
-                ...matches.filter(match => {
-                    return !matchPredictions.find(mp => mp.match.id === match.id);
-                })
-                    .map(i => {
-                        return this.transformMatchToPrediction(i);
-                    })];
+            ...matches.filter(match => {
+                return !matchPredictions.find(mp => mp.match.id === match.id);
+            })
+                .map(i => {
+                    return this.transformMatchToPrediction(i);
+                })];
         } else if (!matchPredictions || matchPredictions.length === 0 && matches) {
             combinedMatchPredictions = matches.map(i => {
                 return this.transformMatchToPrediction(i);
@@ -70,8 +70,8 @@ export class MatchPredictionService {
         return combinedMatchPredictions;
     }
 
-    async findTodaysMatchesForLoggedInUser(firebaseIdentifier: string): Promise<{ predictionType: string, knockout: Knockout[], matchPredictions?: MatchPrediction[], knockoutPredictions?: KnockoutPrediction[] }> {
-
+    async findTodaysMatchesForLoggedInUser(firebaseIdentifier: string) {
+        // Promise<{ predictionType: string, knockout: Knockout[], matchPredictions?: MatchPrediction[], knockoutPredictions?: KnockoutPrediction[] }>
         const today = new Date(new Date().setHours(0, 0, 0, 0));
         const tomorrow = new Date(new Date().setHours(23, 59, 59, 0));
         let knockoutPredictions = []
@@ -83,9 +83,9 @@ export class MatchPredictionService {
             .leftJoinAndSelect('matchprediction.match', 'match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
-            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             // .andWhere('match.date <= :tomorrow', {tomorrow})
-            .andWhere('match.date >= :today', {today})
+            .andWhere('match.date >= :today', { today })
             .orderBy('match.ordering')
             .take(4)
             .getMany();
@@ -93,11 +93,11 @@ export class MatchPredictionService {
         if (matchPredictions.length === 0) {
 
             knockout = await this.knockoutRepo
-            .createQueryBuilder('knockout')
+                .createQueryBuilder('knockout')
                 .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
                 .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
                 .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
-                .where('knockout.date <= :tomorrow', {tomorrow})
+                .where('knockout.date <= :tomorrow', { tomorrow })
                 // .andWhere('knockout.date >= :today', {today})
                 .orderBy('knockout.ordering')
                 .take(3)
@@ -109,7 +109,7 @@ export class MatchPredictionService {
                 const roundIds = await this.knockoutRepo
                     .createQueryBuilder('knockout')
                     .select('knockout.id')
-                    .where('knockout.round = :round', {round})
+                    .where('knockout.round = :round', { round })
                     .getMany()
 
                 knockoutPredictions = await this.knockoutPredictionRepo
@@ -117,8 +117,8 @@ export class MatchPredictionService {
                     .leftJoin('knockoutprediction.participant', 'participant')
                     .leftJoinAndSelect('knockoutprediction.knockout', 'knockout')
                     .leftJoinAndSelect('knockoutprediction.selectedTeam', 'selectedTeam')
-                    .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
-                    .andWhere('knockout.id IN(:...round)', {round: roundIds.map(r => r.id)})
+                    .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
+                    .andWhere('knockout.id IN(:...round)', { round: roundIds.map(r => r.id) })
                     .orderBy('knockout.ordering')
                     .getMany();
             }
@@ -126,25 +126,52 @@ export class MatchPredictionService {
         return {
             predictionType: matchPredictions.length > 0 ? 'matches' : 'knockout',
             matchPredictions: matchPredictions,
-            knockout: knockout.map(ko => {
-                console.log(ko);
+            knockout: await Promise.all(knockout.map(async ko => {
+                const homeDoor = await this.setKnockoutHomeInNextRound(firebaseIdentifier, ko.round, ko.homeTeam.id)
+                const awayDoor = await this.setKnockoutAwayInNextRound(firebaseIdentifier, ko.round, ko.awayTeam.id)
                 return {
                     ...ko,
                     homeSpelpunten: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id) ? this.standService.getKOPoints(round) : null,
                     awaySpelpunten: knockoutPredictions.find(kp => ko.awayTeam && kp.selectedTeam.id === ko.awayTeam.id) ? this.standService.getKOPoints(round) : null,
                     homeTeam: {
                         ...ko.homeTeam,
-                        selectedTeam: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id)
+                        selectedTeam: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id),
+                        predictedNextRound: !!homeDoor
                     },
                     awayTeam: {
                         ...ko.awayTeam,
-                        selectedTeam: knockoutPredictions.find(kp => ko.awayTeam && kp.selectedTeam.id === ko.awayTeam.id)
+                        selectedTeam: knockoutPredictions.find(kp => ko.awayTeam && kp.selectedTeam.id === ko.awayTeam.id),
+                        predictedNextRound: !!awayDoor
+
                     },
                 }
-            }),
+            })),
         }
     }
 
+    async setKnockoutHomeInNextRound(firebaseIdentifier: string, round: string, winnerTeamId: string) {
+        const temp = this.knockoutPredictionRepo
+            .createQueryBuilder('knockoutprediction')
+            .leftJoin('knockoutprediction.participant', 'participant')
+            .leftJoinAndSelect('knockoutprediction.selectedTeam', 'selectedTeam')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
+            .andWhere('knockoutprediction.round = :round', { round })
+            .andWhere('selectedTeam.id = :winnerTeamId', { winnerTeamId })
+            .getOne();
+
+        return temp
+    }
+    async setKnockoutAwayInNextRound(firebaseIdentifier: string, round, winnerTeamId) {
+        const temp = await this.knockoutPredictionRepo
+            .createQueryBuilder('knockoutprediction')
+            .leftJoin('knockoutprediction.participant', 'participant')
+            .leftJoinAndSelect('knockoutprediction.selectedTeam', 'selectedTeam')
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
+            .andWhere('knockoutprediction.round = :round', { round })
+            .andWhere('selectedTeam.id = :winnerTeamId', { winnerTeamId })
+            .getOne();
+        return temp
+    }
     async findMatchesForParticipant(participantId: string): Promise<MatchPrediction[]> {
         const matchPredictions = await this.matchPredictionRepo
             .createQueryBuilder('matchprediction')
@@ -152,7 +179,7 @@ export class MatchPredictionService {
             .leftJoinAndSelect('matchprediction.match', 'match')
             .leftJoinAndSelect('match.homeTeam', 'homeTeam')
             .leftJoinAndSelect('match.awayTeam', 'awayTeam')
-            .where('participant.id = :participantId', {participantId})
+            .where('participant.id = :participantId', { participantId })
             .orderBy('match.ordering')
             .getMany();
 
@@ -163,10 +190,10 @@ export class MatchPredictionService {
 
         const participant = await this.participantRepo
             .createQueryBuilder('participant')
-            .where('participant.firebaseIdentifier = :firebaseIdentifier', {firebaseIdentifier})
+            .where('participant.firebaseIdentifier = :firebaseIdentifier', { firebaseIdentifier })
             .getOne();
 
-        return this.matchPredictionRepo.save({...item, participant})
+        return this.matchPredictionRepo.save({ ...item, participant })
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
@@ -176,7 +203,7 @@ export class MatchPredictionService {
     }
 
     transformMatchToPrediction(i): any {
-        return {homeScore: null, awayScore: null, match: i};
+        return { homeScore: null, awayScore: null, match: i };
     }
 
 }
