@@ -99,6 +99,7 @@ export class MatchPredictionService {
                 .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
                 .where('knockout.date <= :tomorrow', {tomorrow})
                 // .andWhere('knockout.date >= :today', {today})
+                .orderBy('knockout.ordering')
                 .take(3)
                 .getMany();
 
