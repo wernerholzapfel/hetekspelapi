@@ -129,10 +129,14 @@ export class MatchPredictionService {
             knockout: await Promise.all(knockout.map(async ko => {
                 const homeDoor = await this.setKnockoutHomeInNextRound(firebaseIdentifier, ko.round, ko.homeTeam.id)
                 const awayDoor = await this.setKnockoutAwayInNextRound(firebaseIdentifier, ko.round, ko.awayTeam.id)
+                console.log(homeDoor)
+                console.log(awayDoor)
+                console.log(ko)
                 return {
                     ...ko,
-                    homeSpelpunten: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id) ? this.standService.getKOPoints(round) : null,
-                    awaySpelpunten: knockoutPredictions.find(kp => ko.awayTeam && kp.selectedTeam.id === ko.awayTeam.id) ? this.standService.getKOPoints(round) : null,
+                    spelpunten: homeDoor?.selectedTeam?.id === ko.winnerTeam.id && awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
+                        2 * this.standService.getKOPoints(round) : homeDoor?.selectedTeam?.id === ko.winnerTeam.id || awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
+                            this.standService.getKOPoints(round) : null,
                     homeTeam: {
                         ...ko.homeTeam,
                         selectedTeam: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id),
