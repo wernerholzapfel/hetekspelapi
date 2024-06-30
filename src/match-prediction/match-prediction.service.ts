@@ -100,7 +100,7 @@ export class MatchPredictionService {
                 .where('knockout.date <= :tomorrow', { tomorrow })
                 // .andWhere('knockout.date >= :today', {today})
                 .orderBy('knockout.ordering')
-                .take(3)
+                .take(4)
                 .getMany();
 
             round = knockout.length > 0 && knockout[0].round != '2' ? (parseInt(knockout[0].round) / 2).toString() : knockout ? 0 : knockout[0].round
