@@ -134,9 +134,9 @@ export class MatchPredictionService {
                 console.log(ko)
                 return {
                     ...ko,
-                    spelpunten: homeDoor?.selectedTeam?.id === ko.winnerTeam.id && awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
-                        2 * this.standService.getKOPoints(round) : homeDoor?.selectedTeam?.id === ko.winnerTeam.id || awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
-                            this.standService.getKOPoints(round) : null,
+                    spelpunten: ko.winnerTeam ? homeDoor?.selectedTeam?.id === ko.winnerTeam.id && awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
+                        2 * this.standService.getKOPoints(round) : ko.winnerTeam && homeDoor?.selectedTeam?.id === ko.winnerTeam.id || awayDoor?.selectedTeam?.id === ko.winnerTeam.id ?
+                            this.standService.getKOPoints(round) : null : null,
                     homeTeam: {
                         ...ko.homeTeam,
                         selectedTeam: knockoutPredictions.find(kp => ko.homeTeam && kp.selectedTeam.id === ko.homeTeam.id),
