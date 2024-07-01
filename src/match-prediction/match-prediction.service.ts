@@ -99,7 +99,7 @@ export class MatchPredictionService {
                 .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
                 .where('knockout.date <= :tomorrow', { tomorrow })
                 // .andWhere('knockout.date >= :today', {today})
-                .orderBy('knockout.ordering')
+                .orderBy('knockout.ordering', 'DESC')
                 .take(4)
                 .getMany();
 
@@ -123,6 +123,7 @@ export class MatchPredictionService {
                     .getMany();
             }
         }
+        knockout = knockout.sort((a, b) => a.ordering - b.ordering)
         return {
             predictionType: matchPredictions.length > 0 ? 'matches' : 'knockout',
             matchPredictions: matchPredictions,
@@ -149,7 +150,7 @@ export class MatchPredictionService {
 
                     },
                 }
-            })),
+            }))
         }
     }
 
