@@ -113,6 +113,7 @@ export class KnockoutService {
     }
 
     async update(item: UpdateKnockoutDto): Promise<Knockout> {
+        const hasLoserFinal = false
         const queryRunner = this.dataSource.createQueryRunner();
         let knockout;
         await queryRunner.connect();
@@ -241,9 +242,9 @@ export class KnockoutService {
                     .createQueryBuilder()
                     .update(Team)
                     .set({
-                        isEliminated: knockout.round === '4' ? false : true,
+                        isEliminated: hasLoserFinal && knockout.round === '4' ? false : true,
                         eliminationRound: knockout.round,
-                        latestActiveRound: knockout.round === '4' ? '3' : knockout.round
+                        latestActiveRound: hasLoserFinal && knockout.round === '4' ? '3' : knockout.round
                     })
                     .where("id = :teamId", { teamId: item.homeTeam.id === item.winnerTeam.id ? item.awayTeam.id : item.homeTeam.id })
                     .execute()
