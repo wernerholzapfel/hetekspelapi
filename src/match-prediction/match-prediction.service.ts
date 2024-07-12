@@ -97,13 +97,15 @@ export class MatchPredictionService {
                 .leftJoinAndSelect('knockout.homeTeam', 'homeTeam')
                 .leftJoinAndSelect('knockout.awayTeam', 'awayTeam')
                 .leftJoinAndSelect('knockout.winnerTeam', 'winnerTeam')
-                .where('knockout.date <= :tomorrow', { tomorrow })
+                // .where('knockout.date <= :tomorrow', { tomorrow })
                 // .andWhere('knockout.date >= :today', {today})
                 .orderBy('knockout.ordering', 'DESC')
                 .take(4)
                 .getMany();
 
-            round = knockout.length > 0 && knockout[0].round != '2' ? (parseInt(knockout[0].round) / 2).toString() : knockout ? 0 : knockout[0].round
+            round = knockout.length > 0 && knockout[0].round != '2' ?
+                (parseInt(knockout[0].round) / 2).toString() : knockout ?
+                    '2' : knockout[0].round
 
             if (knockout.length > 0) {
                 const roundIds = await this.knockoutRepo
