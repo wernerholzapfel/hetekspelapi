@@ -22,6 +22,15 @@ export class ParticipantController {
     async find(@Req() req): Promise<Participant> {
         return this.participantsService.find(req.user.uid);
     }
+     @Get('wrongkp')
+    async wrongkp(@Req() req): Promise<any[]> {
+        return this.participantsService.wrongkp();
+    }
+    
+    @Get('sendpush')
+    async sendpush(@Req() req): Promise<any> {
+        return this.participantsService.sendpush();
+    }
     @Post()
     async create(@Req() req, @Body() createParticipantDto: CreateParticipantDto) {
         this.logger.log('post participant');
